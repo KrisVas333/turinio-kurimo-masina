@@ -102,6 +102,12 @@ canvas{max-width:100%;border:1px solid var(--line);border-radius:4px}
 <header>
   <span class="brand">TURINIO KŪRIMO <span>MAŠINA</span></span>
   <span id="pct">0%</span>
+  <select id="voice-sel" title="Balsas" style="font-family:var(--mono);font-size:12px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:6px 4px;max-width:110px">
+    <option value="vyras">🎙️ Kris</option>
+    <option value="moteris">👩 Moteris</option>
+    <option value="vaikas">🧒 Vaikas</option>
+    <option value="linksmas">😄 Klaidas</option>
+  </select>
   <button id="audio-btn" title="Klausyti šios skaidrės">🔊</button>
   <button id="theme-btn" title="Šviesa/tamsa">◐</button>
   <button id="mentor-btn" title="Mentoriaus užrašai (M)">📋</button>
@@ -513,7 +519,7 @@ Pabaigoje pasiūlyk klausimą auditorijai po kiekvienu postu.</div>
 var SUPA_URL='https://iiekmeylpppczicrsxho.supabase.co',SUPA_KEY='sb_publishable_iJC59f30YJm7hU4OwZsLDQ_9FN-ygzF';
 var slides=[].slice.call(document.querySelectorAll('.slide'));
 var S={i:0,pts:0,name:'',org:'Lighthouse HUB',mode:null,voice:null,answers:{},tries:{},t0:Date.now(),doneMs:null};
-try{var saved=JSON.parse(localStorage.getItem('as-mokymai-v3')||'null');if(saved&&saved.answers){S=saved}}catch(e){}
+try{var saved=JSON.parse(localStorage.getItem('tkm-v6')||'null');if(saved&&saved.answers){S=saved}}catch(e){}
 var fill=document.getElementById('fill'),pts=document.getElementById('pts'),pct=document.getElementById('pct'),
     nextB=document.getElementById('next'),prevB=document.getElementById('prev'),
     hint=document.getElementById('gate-hint'),timerEl=document.getElementById('timer');
@@ -539,20 +545,22 @@ speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschange
 setTimeout(checkVoices,600);
 document.getElementById('mentor-btn').addEventListener('click',function(){document.body.classList.toggle('live')});
 addEventListener('keydown',function(e){if((e.key==='m'||e.key==='M')&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName))document.body.classList.toggle('live')});
+function setVoice(v,announce){S.voice=v;save();
+  [].forEach.call(document.querySelectorAll('.voicegrid button'),function(x){x.classList.toggle('sel',x.getAttribute('data-v')===v)});
+  var sel=document.getElementById('voice-sel');if(sel)sel.value=v;
+  if(announce)document.getElementById('audio-btn').click();}
 [].forEach.call(document.querySelectorAll('.voicegrid button'),function(b){
-  b.addEventListener('click',function(){
-    S.voice=b.getAttribute('data-v');save();
-    [].forEach.call(document.querySelectorAll('.voicegrid button'),function(x){x.classList.toggle('sel',x===b)});
-    speak('Labas! Aš būsiu tavo balsas šiuose mokymuose.');
-  });
-  if(S.voice===b.getAttribute('data-v'))b.classList.add('sel');
+  b.addEventListener('click',function(){setVoice(b.getAttribute('data-v'),true)});
 });
+document.getElementById('voice-sel').addEventListener('change',function(){setVoice(this.value,true)});
+if(!S.voice)S.voice='vyras';
+setVoice(S.voice,false);
 var un=document.getElementById('uname'),uo=document.getElementById('uorg');
 un.value=S.name||'';uo.value=S.org||'Lighthouse HUB';
 un.addEventListener('input',function(){S.name=un.value;save()});
 uo.addEventListener('input',function(){S.org=uo.value;save()});
 
-function save(){try{localStorage.setItem('as-mokymai-v3',JSON.stringify(S))}catch(e){}}
+function save(){try{localStorage.setItem('tkm-v6',JSON.stringify(S))}catch(e){}}
 
 /* TEST REVEAL BUTTONS — auto-numbered */
 var testCounter=0;
