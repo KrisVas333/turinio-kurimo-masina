@@ -111,6 +111,7 @@ canvas{max-width:100%;border:1px solid var(--line);border-radius:4px}
   <button id="audio-btn" title="Klausyti šios skaidrės">🔊</button>
   <button id="theme-btn" title="Šviesa/tamsa">◐</button>
   <button id="mentor-btn" title="Mentoriaus užrašai (M)">📋</button>
+  <button id="reset-btn" title="Pradėti iš naujo">↺</button>
   <span id="timer"></span>
   <span id="pts">0 tšk</span>
 </header>
@@ -771,6 +772,14 @@ document.getElementById('dl-report').addEventListener('click',function(){
   var b=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
   var a=document.createElement('a');a.download='ataskaita-turinio-masina.txt';a.href=URL.createObjectURL(b);a.click();
 });
+function hardReset(){
+  if(confirm('Pradėti iš naujo? Taškai ir atsakymai išsinulins (vardas ir balsas liks).')){
+    var n=S.name,o=S.org,v=S.voice;
+    S={i:0,pts:0,name:n,org:o,mode:null,voice:v,answers:{},tries:{},t0:Date.now(),doneMs:null};
+    save();location.reload();
+  }
+}
+document.getElementById('reset-btn').addEventListener('click',hardReset);
 document.getElementById('restart').addEventListener('click',function(){
   if(confirm('Pradėti iš naujo? Taškai išsinulins (vardas liks).')){
     var n=S.name,o=S.org,v=S.voice;
