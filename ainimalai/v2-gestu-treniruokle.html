@@ -3,101 +3,156 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AInimalų Gestų Treniruoklė · v2 DEMO</title>
+<title>AInimalų Laboratorija · v2.1</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#0a0e27;color:#fff;overflow:hidden}
-#hud{position:fixed;top:0;left:0;right:0;height:54px;display:flex;align-items:center;gap:14px;padding:0 16px;background:rgba(8,10,32,.92);border-bottom:2px solid #2a2f6a;z-index:50}
-#hud .code{font-weight:800;color:#7ee0ff}
+#hud{position:fixed;top:0;left:0;right:0;height:54px;display:flex;align-items:center;gap:12px;padding:0 14px;background:rgba(8,10,32,.92);border-bottom:2px solid #2a2f6a;z-index:50}
+#hud .code{font-weight:800;color:#7ee0ff;white-space:nowrap}
 #hud .spacer{flex:1}
-#hud .badge{background:#171b4d;border:1px solid #3c418f;border-radius:10px;padding:4px 12px;font-size:14px}
+.badge{background:#171b4d;border:1px solid #3c418f;border-radius:10px;padding:4px 12px;font-size:14px;white-space:nowrap}
+#ptsBadge{background:#3a2f00;border-color:#ffd94a;color:#ffd94a;font-weight:900;font-size:17px}
+#energyWrap{display:flex;align-items:center;gap:6px}
+#energyBar{width:110px;height:12px;background:#171b4d;border:1px solid #3c418f;border-radius:6px;overflow:hidden}
+#energyFill{height:100%;width:60%;background:linear-gradient(90deg,#41d67c,#ffd94a);transition:width .25s}
 #stage{position:absolute;inset:54px 0 0 0}
 #three-wrap{position:absolute;inset:0}
 canvas{display:block}
-/* panels */
-.panel{position:absolute;background:rgba(13,16,48,.94);border:2px solid #3c418f;border-radius:18px;padding:18px;z-index:20}
+.panel{position:absolute;background:rgba(13,16,48,.94);border:2px solid #3c418f;border-radius:18px;padding:16px;z-index:20}
 #introPanel{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:none;border-radius:0;background:rgba(8,10,32,.97)}
-#introPanel h1{font-size:46px;margin:8px 0}
-#introPanel p{font-size:22px;line-height:1.4;max-width:760px;color:#cfd6ff}
+#introPanel h1{font-size:44px;margin:8px 0}
+#introPanel p{font-size:21px;line-height:1.4;max-width:780px;color:#cfd6ff}
 button{font-family:inherit;cursor:pointer;border:none;border-radius:14px;font-weight:800}
 .big-btn{font-size:24px;padding:16px 34px;background:#7ee0ff;color:#08122a;margin-top:18px}
-.big-btn.alt{background:#2a2f6a;color:#fff}
-#camPanel{left:14px;bottom:14px;width:300px}
-#cam{width:100%;border-radius:12px;transform:scaleX(-1);background:#000}
-#handInfo{font-size:15px;color:#9aa3e8;margin-top:6px;min-height:20px}
-#fingerBig{position:absolute;top:-18px;right:-8px;background:#ffd94a;color:#101336;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;box-shadow:0 4px 16px rgba(0,0,0,.5)}
-#trainPanel{right:14px;top:68px;width:340px;max-height:calc(100% - 96px);overflow:auto}
-#trainPanel h3{font-size:19px;margin-bottom:8px;color:#7ee0ff}
-.gest-row{display:flex;align-items:center;gap:8px;background:#171b4d;border:2px solid #3c418f;border-radius:12px;padding:8px 10px;margin-bottom:8px}
-.gest-row .em{font-size:26px}
-.gest-row .nm{flex:1;font-size:16px;font-weight:800}
-.gest-row .cnt{font-size:13px;color:#9aa3e8;min-width:64px}
-.gest-row button{font-size:14px;padding:8px 12px;background:#41d67c;color:#06331a}
+#camPanel{left:12px;bottom:12px;width:280px;padding:10px}
+#camBox{position:relative}
+#cam{width:100%;border-radius:10px;transform:scaleX(-1);background:#000;display:block}
+#lmCanvas{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);pointer-events:none}
+#handInfo{font-size:14px;color:#9aa3e8;margin-top:6px;min-height:18px}
+#fingerBig{position:absolute;top:-14px;right:-8px;background:#ffd94a;color:#101336;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;box-shadow:0 4px 16px rgba(0,0,0,.5);z-index:2}
+/* mode tabs */
+#modeTabs{position:absolute;top:66px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:25}
+.mode-tab{font-size:17px;padding:10px 18px;border-radius:12px;background:rgba(23,27,77,.95);color:#fff;border:2px solid #3c418f}
+.mode-tab.on{background:#7ee0ff;color:#08122a;border-color:#7ee0ff}
+.mode-tab.locked{opacity:.45}
+.mode-tab .lock{font-size:13px}
+#rightPanel{right:12px;top:112px;width:330px;max-height:calc(100% - 150px);overflow:auto}
+#rightPanel h3{font-size:18px;margin-bottom:8px;color:#7ee0ff}
+.gest-row{display:flex;align-items:center;gap:8px;background:#171b4d;border:2px solid #3c418f;border-radius:12px;padding:7px 9px;margin-bottom:7px}
+.gest-row.locked{opacity:.4}
+.gest-row .em{font-size:24px}
+.gest-row .nm{flex:1;font-size:15px;font-weight:800}
+.gest-row .cnt{font-size:12px;color:#9aa3e8;min-width:56px}
+.gest-row button{font-size:13px;padding:7px 11px;background:#41d67c;color:#06331a}
 .gest-row button.rec{background:#ff5470;color:#fff;animation:pulse 1s infinite}
-@keyframes pulse{50%{opacity:.6}}
+@keyframes pulse{50%{opacity:.55}}
 .gest-row.active-pred{border-color:#ffd94a;box-shadow:0 0 14px rgba(255,217,74,.35)}
-#confBar{height:8px;background:#171b4d;border-radius:4px;overflow:hidden;margin-top:4px}
+#confBar{height:7px;background:#171b4d;border-radius:4px;overflow:hidden;margin-top:2px}
 #confFill{height:100%;width:0%;background:#ffd94a;transition:width .2s}
-#lesson{font-size:14px;color:#9aa3e8;line-height:1.45;margin-top:10px;border-top:1px dashed #3c418f;padding-top:8px}
-#lesson b{color:#7ee0ff}
-#statusMsg{position:absolute;top:68px;left:50%;transform:translateX(-50%);background:rgba(13,16,48,.92);border:2px solid #3c418f;border-radius:14px;padding:10px 22px;font-size:20px;font-weight:800;z-index:30;text-align:center;max-width:80%}
-#trickName{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:34px;font-weight:900;color:#ffd94a;text-shadow:0 2px 12px rgba(0,0,0,.7);z-index:30;opacity:0;transition:opacity .3s}
-#mbtn{position:fixed;right:14px;bottom:14px;width:48px;height:48px;border-radius:50%;background:#ffd94a;color:#101336;font-size:24px;z-index:60}
-#mpanel{position:fixed;right:14px;bottom:72px;width:360px;max-height:46vh;overflow:auto;background:#fffbe8;color:#222;border-radius:14px;padding:14px 16px;font-size:16px;line-height:1.45;display:none;z-index:60}
+.mode-help{font-size:15px;color:#cfd6ff;line-height:1.45;background:#171b4d;border-radius:10px;padding:10px 12px}
+.mode-help b{color:#7ee0ff}
+/* progress / unlock */
+#progressPanel{left:12px;top:66px;width:250px;padding:12px}
+#progressPanel h3{font-size:16px;color:#ffd94a;margin-bottom:6px}
+.unlock-row{display:flex;gap:8px;align-items:center;font-size:14px;margin-bottom:5px;color:#9aa3e8}
+.unlock-row.done{color:#41d67c}
+.unlock-row.next{color:#ffd94a;font-weight:800}
+#progBarWrap{height:10px;background:#171b4d;border-radius:5px;overflow:hidden;margin:8px 0}
+#progBarFill{height:100%;width:0%;background:linear-gradient(90deg,#7ee0ff,#ffd94a);transition:width .5s}
+#statusMsg{position:absolute;top:112px;left:50%;transform:translateX(-50%);background:rgba(13,16,48,.95);border:2px solid #ffd94a;border-radius:14px;padding:10px 22px;font-size:19px;font-weight:800;z-index:40;text-align:center;max-width:76%}
+#trickName{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:32px;font-weight:900;color:#ffd94a;text-shadow:0 2px 12px rgba(0,0,0,.7);z-index:30;opacity:0;transition:opacity .3s}
+.float-pts{position:absolute;font-size:26px;font-weight:900;color:#ffd94a;z-index:45;pointer-events:none;animation:floatUp 1.4s forwards;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+@keyframes floatUp{to{transform:translateY(-90px);opacity:0}}
+#mbtn{position:fixed;right:12px;bottom:12px;width:46px;height:46px;border-radius:50%;background:#ffd94a;color:#101336;font-size:22px;z-index:60}
+#mpanel{position:fixed;right:12px;bottom:68px;width:380px;max-height:52vh;overflow:auto;background:#fffbe8;color:#222;border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.45;display:none;z-index:60}
 #mpanel.on{display:block}
 #mpanel b{color:#8a5a00}
+#eduTip{position:absolute;bottom:16px;left:12px;right:auto;width:280px;background:rgba(23,27,77,.92);border:1px dashed #7ee0ff;border-radius:12px;padding:10px 12px;font-size:13px;color:#cfd6ff;z-index:20;line-height:1.4;display:none}
+#eduTip b{color:#7ee0ff}
 .hidden{display:none!important}
 #loaderNote{font-size:16px;color:#9aa3e8;margin-top:10px}
+/* artifact overlay */
+#artifactOverlay{position:fixed;inset:0;background:rgba(8,10,32,.96);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#artifactOverlay.on{display:flex}
+#artifactOverlay .glasses{font-size:120px;animation:pop .7s}
+@keyframes pop{0%{transform:scale(0) rotate(-30deg)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+#artifactOverlay h2{font-size:42px;color:#ffd94a;margin:10px 0}
+#artifactOverlay p{font-size:22px;max-width:640px;color:#cfd6ff;line-height:1.4}
 </style>
 </head>
 <body>
 
 <div id="hud">
-  <span class="code">🐾 PA1 · v2 DEMO — Gestų treniruoklė</span>
+  <span class="code">🧪 AInimalų Laboratorija · v2.1</span>
   <span class="badge" id="modelState">🧠 Modelis: tuščias</span>
   <span class="spacer"></span>
-  <span class="badge">Tu mokai kompiuterį MATYTI 👁</span>
+  <span id="energyWrap" class="badge">⚡<div id="energyBar"><div id="energyFill"></div></div></span>
+  <span class="badge" id="ptsBadge">⭐ 0</span>
 </div>
 
 <div id="stage">
   <div id="three-wrap"></div>
 
+  <div id="modeTabs" class="hidden"></div>
+
+  <div id="progressPanel" class="panel hidden">
+    <h3>🏆 Kelias iki Artefakto</h3>
+    <div id="progBarWrap"><div id="progBarFill"></div></div>
+    <div id="unlockList"></div>
+  </div>
+
   <div id="introPanel" class="panel">
-    <div style="font-size:80px">🖐🐍</div>
-    <h1>Gestų treniruoklė</h1>
-    <p><b>Spektrinė Gyvatė dar nemoka tavęs suprasti.</b><br>
-    Išmokyk ją triukų savo rankomis: parodyk gestą, įrašyk pavyzdžius —<br>
-    ir kompiuteris IŠMOKS jį atpažinti. Čia tikras <b>mašininis mokymasis</b>!</p>
+    <div style="font-size:76px">🧪🐍</div>
+    <h1>AInimalų Laboratorija</h1>
+    <p><b>Spektrinė Gyvatė laukia treniruotės.</b><br>
+    Mokyk ją gestais, valdyk delnu kaip DRONĄ, keisk dydį rankomis —<br>
+    ir rink taškus, kol atrakinsi <b>slaptą artefaktą</b>.<br>
+    <span style="color:#7ee0ff">Tu mokai kompiuterį matyti. Taip pat valdomi tikri dronai!</span></p>
     <button class="big-btn" id="startBtn">📷 Įjungti kamerą ir pradėti</button>
     <div id="loaderNote"></div>
-    <p style="font-size:15px;margin-top:14px;color:#5a63a8">Kamera veikia tik šiame kompiuteryje — niekas niekur nesiunčiama.</p>
+    <p style="font-size:14px;margin-top:12px;color:#5a63a8">Vaizdas apdorojamas TIK šiame kompiuteryje — niekur nesiunčiamas.</p>
   </div>
 
   <div id="camPanel" class="panel hidden">
-    <div style="position:relative">
+    <div id="camBox">
       <video id="cam" autoplay playsinline muted></video>
+      <canvas id="lmCanvas"></canvas>
       <div id="fingerBig">–</div>
     </div>
     <div id="handInfo">Ranka nematoma…</div>
   </div>
 
-  <div id="trainPanel" class="panel hidden">
-    <h3>🎓 Gyvatės triukų mokykla</h3>
-    <div id="gestList"></div>
+  <div id="rightPanel" class="panel hidden">
+    <h3 id="rpTitle">🎓 Triukų mokykla</h3>
+    <div id="rpBody"></div>
     <div id="confBar"><div id="confFill"></div></div>
-    <div id="lesson"><b>Kaip mokosi AI?</b> Iš PAVYZDŽIŲ. Kuo daugiau gerų pavyzdžių — tuo geriau atpažįsta. Jei klysta: parodyk gestą iš įvairių pusių ir įrašyk dar!</div>
   </div>
 
+  <div id="eduTip"></div>
   <div id="statusMsg" class="hidden"></div>
   <div id="trickName"></div>
 </div>
 
+<div id="artifactOverlay">
+  <div class="glasses">🕶️</div>
+  <h2>GODMODELINK AKINIAI!</h2>
+  <p>Tu įrodei, kad moki <b>treniruoti dirbtinį intelektą</b>:<br>
+  mokei jį pavyzdžiais, valdei delnu kaip droną, supratai, kaip jis mato.<br><br>
+  <b>Tai ta pati technologija</b>, kuria šiandien valdomi DJI dronai ir rytojaus robotai.<br>
+  O svarbiausia — treniruodamas AI, treniravai SAVO smegenis. 🧠</p>
+  <button class="big-btn" onclick="document.getElementById('artifactOverlay').classList.remove('on')">Tęsti laboratorijoje ▶</button>
+</div>
+
 <button id="mbtn" title="Mentoriaus užrašai">M</button>
 <div id="mpanel">
-  <b>Mentoriui:</b> ① Įjunkite kamerą ② Prie kiekvieno triuko spauskite „Įrašyti" ir laikykite gestą prieš kamerą (~3 s, įrašo 20 pavyzdžių) ③ Įrašius bent 2 gestus — gyvatė pradeda klausyti! ④ Klaidos = mokymosi auksas: klauskite vaikų KODĖL suklydo (per mažai pavyzdžių? panašūs gestai?) ir įrašykite daugiau.<br><br>
-  <b>Edukacija (AI4K12):</b> kompiuteris „mato" per kamerą (percepcija) · mokosi iš pavyzdžių, ne magijos · žmogus sprendžia, ko mokyti.<br><br>
-  <b>Pirštų skaičius</b> geltoname burbule veikia visada — greitas balsavimas klasei (1–5).
+  <b>Mentoriui — edukacinė pusė:</b><br>
+  🎓 <b>Triukai</b> = mašininis mokymasis: modelis mokosi TIK iš vaiko pavyzdžių. Klaidos — auksas: „kodėl suklydo?" (per mažai pavyzdžių / panašūs gestai).<br>
+  📏 <b>Dydis</b> = kompiuterinė regos geometrija: kompiuteris matuoja ATSTUMĄ tarp delnų iš 21 taško kiekvienoje rankoje.<br>
+  🚁 <b>Dronas</b> = delnas kaip kursorius — LYGIAI TAIP valdomi tikri dronai (DJI Neo gestų valdymas!) ir ateities robotai.<br>
+  ⚡ <b>Energija</b> = delno pasukimas: kompiuteris skaičiuoja delno KRYPTĮ 3D erdvėje.<br>
+  Skeletas ant vaizdo = „ką mato kompiuteris": ne veidą, ne vaiką — tik 21 tašką. Puiki privatumo pamoka.<br><br>
+  <b>Eiga klasei:</b> vaikai eina po vieną / poromis prie kameros, klasė sako, kokį gestą rodyti. Taškai bendri — klasės kelias iki artefakto.
 </div>
 
 <script type="importmap">
@@ -107,44 +162,83 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:14px;font-we
 import * as THREE from 'three';
 import {HandLandmarker, FilesetResolver} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs';
 
-/* ---------- 3D SCENE: procedural Spektrinė Gyvatė ---------- */
+/* ================= LAB ENVIRONMENT ================= */
 const wrap = document.getElementById('three-wrap');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0e27);
-scene.fog = new THREE.Fog(0x0a0e27, 14, 30);
+scene.background = new THREE.Color(0xe8eef7);
+scene.fog = new THREE.Fog(0xe8eef7, 16, 34);
 const camera3 = new THREE.PerspectiveCamera(50, wrap.clientWidth/wrap.clientHeight, .1, 100);
-camera3.position.set(0, 2.6, 8);
-camera3.lookAt(0, 1, 0);
+camera3.position.set(0, 2.8, 9); camera3.lookAt(0, 1.4, 0);
 const renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(wrap.clientWidth, wrap.clientHeight);
 wrap.appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x1a1440, 1.4));
-const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(4,6,5); scene.add(key);
-const rim = new THREE.PointLight(0x7ee0ff, 2.2, 20); rim.position.set(-4,3,-2); scene.add(rim);
 
-/* ground */
-const ground = new THREE.Mesh(
-  new THREE.CircleGeometry(14, 48),
-  new THREE.MeshStandardMaterial({color:0x121847, roughness:.9})
-);
-ground.rotation.x = -Math.PI/2; scene.add(ground);
-/* glow ring */
-const ring = new THREE.Mesh(new THREE.RingGeometry(3.2,3.45,64),
-  new THREE.MeshBasicMaterial({color:0x7ee0ff, transparent:true, opacity:.35, side:THREE.DoubleSide}));
-ring.rotation.x = -Math.PI/2; ring.position.y = .02; scene.add(ring);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8899bb, 1.5));
+const key = new THREE.DirectionalLight(0xffffff, 1.8); key.position.set(5,8,6); scene.add(key);
+const cyan = new THREE.PointLight(0x35c8ff, 3, 24); cyan.position.set(-6,3,-3); scene.add(cyan);
+const mag = new THREE.PointLight(0xb26bff, 2.5, 24); mag.position.set(6,3,-4); scene.add(mag);
 
-/* snake: chain of spheres */
+/* floor: glossy white with grid */
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(50,50),
+  new THREE.MeshStandardMaterial({color:0xf2f6fc, roughness:.25, metalness:.1}));
+floor.rotation.x = -Math.PI/2; scene.add(floor);
+const grid = new THREE.GridHelper(50, 50, 0x9fc4ff, 0xd5e2f5);
+grid.position.y = .01; scene.add(grid);
+
+/* white ceiling with glowing light panels */
+const ceil = new THREE.Mesh(new THREE.PlaneGeometry(50,50),
+  new THREE.MeshStandardMaterial({color:0xffffff, roughness:.9}));
+ceil.rotation.x = Math.PI/2; ceil.position.y = 7; scene.add(ceil);
+for(let px=-2; px<=2; px+=2) for(let pz=-1; pz<=1; pz+=1){
+  const lp = new THREE.Mesh(new THREE.BoxGeometry(2.4,.08,1.2),
+    new THREE.MeshStandardMaterial({color:0xffffff, emissive:0xf4faff, emissiveIntensity:1.4}));
+  lp.position.set(px*3.2, 6.96, pz*4-3); scene.add(lp);
+}
+/* back wall */
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(50,8),
+  new THREE.MeshStandardMaterial({color:0xdde7f5, roughness:.85}));
+wall.position.set(0,3.5,-12); scene.add(wall);
+/* neon strips on wall */
+[[0x35c8ff,-11.9,1.2],[0xb26bff,-11.85,2.0]].forEach(([c,z,y])=>{
+  const strip = new THREE.Mesh(new THREE.BoxGeometry(30,.09,.05),
+    new THREE.MeshStandardMaterial({color:c, emissive:c, emissiveIntensity:2}));
+  strip.position.set(0,y,z); scene.add(strip);
+});
+/* glass specimen tubes with glowing cores */
+function tube(x,z,coreColor){
+  const g = new THREE.Group();
+  const glass = new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,4,20,1,true),
+    new THREE.MeshPhysicalMaterial({color:0xcfe6ff, transparent:true, opacity:.22, roughness:.05, side:THREE.DoubleSide}));
+  glass.position.y = 2;
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(.4,1),
+    new THREE.MeshStandardMaterial({color:coreColor, emissive:coreColor, emissiveIntensity:1.6}));
+  core.position.y = 2; core.userData.spin = true;
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(1,1.15,.4,20),
+    new THREE.MeshStandardMaterial({color:0xb9c8de, roughness:.4, metalness:.5}));
+  base.position.y = .2;
+  g.add(glass); g.add(core); g.add(base); g.position.set(x,0,z);
+  g.userData.core = core; scene.add(g); return g;
+}
+const tubes = [tube(-6.5,-7,0x35c8ff), tube(6.5,-7,0xb26bff), tube(-9,-4,0x41d67c)];
+/* pedestal under snake */
+const ped = new THREE.Mesh(new THREE.CylinderGeometry(3.4,3.7,.25,48),
+  new THREE.MeshStandardMaterial({color:0xcdd9ec, roughness:.3, metalness:.4}));
+ped.position.y = .12; scene.add(ped);
+const holo = new THREE.Mesh(new THREE.RingGeometry(3.5,3.75,64),
+  new THREE.MeshBasicMaterial({color:0x35c8ff, transparent:true, opacity:.5, side:THREE.DoubleSide}));
+holo.rotation.x = -Math.PI/2; holo.position.y = .28; scene.add(holo);
+
+/* ================= SNAKE ================= */
 const SEGS = 14;
-const snake = new THREE.Group(); scene.add(snake);
+const snake = new THREE.Group(); snake.position.y = .25; scene.add(snake);
 const segMats = [], segMeshes = [];
 for(let i=0;i<SEGS;i++){
   const r = .55 - i*.026;
-  const m = new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(i/SEGS,.85,.6), roughness:.35, emissive:0x000000});
+  const m = new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(i/SEGS,.85,.55), roughness:.3, emissive:0x000000});
   const s = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 16), m);
   snake.add(s); segMats.push(m); segMeshes.push(s);
 }
-/* head extras: eyes + tongue */
 const head = segMeshes[0];
 function eye(x){
   const g = new THREE.Group();
@@ -155,82 +249,146 @@ function eye(x){
 head.add(eye(-.22)); head.add(eye(.22));
 const tongue = new THREE.Mesh(new THREE.ConeGeometry(.05,.5,8), new THREE.MeshStandardMaterial({color:0xff5470}));
 tongue.rotation.x = Math.PI/2; tongue.position.set(0,-.05,.75); head.add(tongue);
+/* artifact glasses on head (hidden until unlocked) */
+const glasses = new THREE.Group();
+[[-.22],[.22]].forEach(([x])=>{
+  const lens = new THREE.Mesh(new THREE.BoxGeometry(.3,.22,.06),
+    new THREE.MeshStandardMaterial({color:0x111133, emissive:0x35c8ff, emissiveIntensity:.8}));
+  lens.position.set(x,.26,.5); glasses.add(lens);
+});
+const bridge = new THREE.Mesh(new THREE.BoxGeometry(.16,.05,.05), new THREE.MeshStandardMaterial({color:0x222244}));
+bridge.position.set(0,.28,.5); glasses.add(bridge);
+glasses.visible = false; head.add(glasses);
 
-/* particles for effects */
 const particles = new THREE.Group(); scene.add(particles);
-function burst(color, n=26){
+function burst(color, n=24, at){
   for(let i=0;i<n;i++){
     const p = new THREE.Mesh(new THREE.SphereGeometry(.07,6,6), new THREE.MeshBasicMaterial({color}));
-    p.position.set((Math.random()-.5)*2, 1+Math.random()*1.5, (Math.random()-.5)*2);
+    const base = at || new THREE.Vector3(0,1.4,2.6);
+    p.position.set(base.x+(Math.random()-.5)*2, base.y+Math.random()*1.2, base.z+(Math.random()-.5)*2);
     p.userData.v = new THREE.Vector3((Math.random()-.5)*.12, .06+Math.random()*.1, (Math.random()-.5)*.12);
     p.userData.life = 1; particles.add(p);
   }
 }
 
-/* animation state machine */
-let mode = 'idle';          // idle | sokis | vaivorykste | augti | suktis | svyteti | miegas
-let modeT = 0, hueShift = 0, targetScale = 1;
-function setMode(m){
-  if(mode===m) return;
-  mode = m; modeT = 0;
-  const names = {sokis:'💃 ŠOKIS!', vaivorykste:'🌈 VAIVORYKŠTĖ!', augti:'🍄 AUGIMAS!', suktis:'🌀 SUKTUKAS!', svyteti:'✨ ŠVYTĖJIMAS!', miegas:'😴 Miegelis…', idle:''};
-  const t = document.getElementById('trickName');
-  t.textContent = names[m]||''; t.style.opacity = m==='idle'?0:1;
-  if(m!=='idle' && m!=='miegas') burst(0xffd94a);
-  if(m==='miegas') targetScale = 1;
-  if(m==='augti') targetScale = 1.7; else if(m!=='miegas') targetScale = 1;
-}
-const clock = new THREE.Clock();
-function animate(){
-  const t = clock.getElapsedTime(); const dt = clock.getDelta()+.016;
-  modeT += .016;
-  /* snake body follows a wave path */
-  const speed = mode==='miegas'? .25 : mode==='sokis'? 3.2 : 1.4;
-  const amp = mode==='miegas'? .25 : mode==='sokis'? 1.1 : .7;
-  for(let i=0;i<SEGS;i++){
-    const ph = t*speed - i*.42;
-    const x = Math.sin(ph)*amp + (mode==='suktis'? Math.cos(t*2 - i*.3)*1.2 : 0);
-    const y = (mode==='sokis'? Math.abs(Math.sin(ph*1.5))*1.3 : Math.sin(ph*.9)*.18) + .6 + i*.005;
-    const z = -i*.52 + (mode==='suktis'? Math.sin(t*2 - i*.3)*1.2 : Math.cos(ph*.7)*.25);
-    segMeshes[i].position.set(x, y*(mode==='miegas'?.5:1), z+2.6);
-    /* colors */
-    let h = (i/SEGS + hueShift) % 1;
-    const sat = mode==='miegas'? .15 : .85;
-    const lum = mode==='svyteti'? .72 : .6;
-    segMats[i].color.setHSL(h, sat, lum);
-    segMats[i].emissive.setHSL(h, 1, mode==='svyteti'? .35 : 0);
-  }
-  if(mode==='vaivorykste') hueShift += .012;
-  head.lookAt(camera3.position.x, head.position.y, camera3.position.z);
-  /* scale */
-  const cur = snake.scale.x; const ns = cur + (targetScale-cur)*.05;
-  snake.scale.set(ns,ns,ns);
-  /* particles */
-  particles.children.slice().forEach(p=>{
-    p.position.add(p.userData.v); p.userData.v.y -= .003; p.userData.life -= .014;
-    p.material.opacity = p.userData.life; p.material.transparent = true;
-    if(p.userData.life<=0) particles.remove(p);
-  });
-  /* auto-return to idle */
-  if(mode!=='idle' && mode!=='miegas' && modeT>4) setMode('idle');
-  renderer.render(scene, camera3);
-  requestAnimationFrame(animate);
-}
-animate();
-addEventListener('resize', ()=>{ camera3.aspect = wrap.clientWidth/wrap.clientHeight; camera3.updateProjectionMatrix(); renderer.setSize(wrap.clientWidth, wrap.clientHeight); });
+/* ================= GAME STATE ================= */
+let trickMode = 'idle', trickT = 0, hueShift = 0;
+let targetScale = 1, droneTarget = new THREE.Vector3(0,1.2,2.6), droneOn = false;
+let energy = 60;
+let points = 0;
+const awarded = new Set();
 
-/* ---------- HAND TRACKING + KID-TRAINED KNN ---------- */
-const GESTAI = [
-  {key:'sokis',      em:'✊', nm:'Kumštis → Šokis'},
-  {key:'vaivorykste',em:'🖐', nm:'Penki pirštai → Vaivorykštė'},
-  {key:'augti',      em:'☝️', nm:'Vienas pirštas → Augimas'},
-  {key:'suktis',     em:'✌️', nm:'Žirklės → Suktukas'},
-  {key:'svyteti',    em:'🤟', nm:'Rokeris → Švytėjimas'},
-  {key:'miegas',     em:'👌', nm:'OK → Miegelis'}
+const UNLOCKS = [
+  {at:0,   key:'triukai2', label:'🎓 Triukai (2 gestai)'},
+  {at:30,  key:'triukai6', label:'🎓 Visi 6 gestai'},
+  {at:60,  key:'dydis',    label:'📏 Dydžio valdymas'},
+  {at:100, key:'dronas',   label:'🚁 Drono režimas'},
+  {at:150, key:'energija', label:'⚡ Energijos valdymas'},
+  {at:200, key:'artefaktas',label:'🕶️ ARTEFAKTAS'}
 ];
-const examples = [];            // {label, vec}
-let handLm = null, video = null, lastLm = null, recording = null, recLeft = 0;
+function unlocked(key){ const u = UNLOCKS.find(u=>u.key===key); return u && points>=u.at; }
 
+function addPoints(n, reasonKey, label){
+  if(reasonKey){ if(awarded.has(reasonKey)) return; awarded.add(reasonKey); }
+  const before = points; points += n;
+  document.getElementById('ptsBadge').textContent = '⭐ '+points;
+  const f = document.createElement('div'); f.className='float-pts'; f.textContent='+'+n+(label?' '+label:'');
+  f.style.left = (30+Math.random()*40)+'%'; f.style.top='30%';
+  document.getElementById('stage').appendChild(f); setTimeout(()=>f.remove(),1500);
+  UNLOCKS.forEach(u=>{
+    if(before<u.at && points>=u.at){
+      status('🔓 ATRAKINTA: '+u.label+'!', 3500); burst(0xffd94a, 34);
+      if(u.key==='artefaktas'){ glasses.visible = true; document.getElementById('artifactOverlay').classList.add('on'); }
+      buildTabs(); buildUnlockList(); renderModePanel();
+    }
+  });
+  buildUnlockList();
+}
+function buildUnlockList(){
+  const el = document.getElementById('unlockList'); el.innerHTML='';
+  let nextFound = false;
+  UNLOCKS.forEach(u=>{
+    const d = document.createElement('div');
+    const done = points>=u.at;
+    let cls = 'unlock-row'+(done?' done':'');
+    if(!done && !nextFound){ cls += ' next'; nextFound = true; }
+    d.className = cls;
+    d.innerHTML = (done?'✅':'🔒')+' <span style="flex:1">'+u.label+'</span> <span>'+u.at+'⭐</span>';
+    el.appendChild(d);
+  });
+  const maxAt = UNLOCKS[UNLOCKS.length-1].at;
+  document.getElementById('progBarFill').style.width = Math.min(100, points/maxAt*100)+'%';
+}
+
+/* ================= MODES ================= */
+let uiMode = 'triukai';   // triukai | dydis | dronas | energija
+const MODES = [
+  {key:'triukai', em:'🎓', nm:'Triukai', need:'triukai2'},
+  {key:'dydis',   em:'📏', nm:'Dydis',   need:'dydis'},
+  {key:'dronas',  em:'🚁', nm:'Dronas',  need:'dronas'},
+  {key:'energija',em:'⚡', nm:'Energija',need:'energija'}
+];
+const EDU = {
+  triukai:'<b>Kaip mokosi AI?</b> Iš TAVO pavyzdžių. Kompiuteris nemato „kumščio" — jis lygina 21 taško skaičius su tais, kuriuos TU įrašei.',
+  dydis:'<b>Kompiuterinė rega:</b> kompiuteris išmatuoja ATSTUMĄ tarp tavo delnų — geometrija iš taškų. Taip robotai matuoja pasaulį.',
+  dronas:'<b>Delnas = kursorius.</b> Lygiai taip gestais valdomi tikri DJI dronai! Tavo delno vieta kadre virsta gyvatės vieta erdvėje.',
+  energija:'<b>3D kryptis:</b> kompiuteris žino, ar delnas atsuktas Į kamerą, ar NUO jos — iš taškų gylio. Delnas į kamerą = krauna ⚡, nuo kameros = leidžia.'
+};
+function buildTabs(){
+  const el = document.getElementById('modeTabs'); el.innerHTML='';
+  MODES.forEach(m=>{
+    const b = document.createElement('button');
+    const isUn = unlocked(m.need);
+    b.className = 'mode-tab'+(uiMode===m.key?' on':'')+(isUn?'':' locked');
+    b.innerHTML = m.em+' '+m.nm+(isUn?'':' <span class="lock">🔒</span>');
+    b.onclick = ()=>{ if(!isUn){status('🔒 Dar užrakinta — rink taškus!');return;} uiMode=m.key; buildTabs(); renderModePanel(); addPoints(15,'try-'+m.key,m.em); };
+    el.appendChild(b);
+  });
+}
+
+/* gestures (KNN) */
+const GESTAI = [
+  {key:'sokis',      em:'✊', nm:'Kumštis → Šokis', tier:1},
+  {key:'vaivorykste',em:'🖐', nm:'Penki → Vaivorykštė', tier:1},
+  {key:'augti',      em:'☝️', nm:'Vienas → Augimas', tier:2},
+  {key:'suktis',     em:'✌️', nm:'Žirklės → Suktukas', tier:2},
+  {key:'svyteti',    em:'🤟', nm:'Rokeris → Švytėjimas', tier:2},
+  {key:'miegas',     em:'👌', nm:'OK → Miegelis', tier:2}
+];
+const examples = [];
+let recording = null, recLeft = 0;
+
+function renderModePanel(){
+  const t = document.getElementById('rpTitle'), b = document.getElementById('rpBody');
+  document.getElementById('eduTip').style.display='block';
+  document.getElementById('eduTip').innerHTML = EDU[uiMode];
+  if(uiMode==='triukai'){
+    t.textContent='🎓 Triukų mokykla';
+    b.innerHTML='';
+    GESTAI.forEach(g=>{
+      const locked = g.tier===2 && !unlocked('triukai6');
+      const row = document.createElement('div'); row.className='gest-row'+(locked?' locked':''); row.id='row-'+g.key;
+      row.innerHTML = `<span class="em">${g.em}</span><span class="nm">${g.nm}</span><span class="cnt" id="cnt-${g.key}">${examples.filter(e=>e.label===g.key).length} pvz.</span>`;
+      if(!locked){
+        const btn = document.createElement('button'); btn.textContent='● Įrašyti'; btn.id='rec-'+g.key;
+        btn.onclick = ()=>{ recording=g.key; recLeft=20; btn.classList.add('rec'); btn.textContent='Rodyk!'; };
+        row.appendChild(btn);
+      }
+      b.appendChild(row);
+    });
+  } else if(uiMode==='dydis'){
+    t.textContent='📏 Dydžio valdymas';
+    b.innerHTML='<div class="mode-help">Parodyk <b>ABI rankas</b>.<br>🤲 Delnai arti = gyvatė mažėja<br>👐 Delnai plačiai = gyvatė AUGA!<br><br>Kompiuteris matuoja atstumą tarp rankų.</div>';
+  } else if(uiMode==='dronas'){
+    t.textContent='🚁 Drono režimas';
+    b.innerHTML='<div class="mode-help">Ištiesk <b>delną (5 pirštai)</b> ir vedžiok —<br>gyvatės galva seks tavo delną kaip DRONAS pilotą.<br><br>✊ Kumštis = STOP (dronas nusileidžia).<br><br>Taip valdomi tikri DJI dronai!</div>';
+  } else if(uiMode==='energija'){
+    t.textContent='⚡ Energijos valdymas';
+    b.innerHTML='<div class="mode-help">Delnas <b>Į kamerą</b> 🖐 = energija KRAUNASI<br>Delnas <b>NUO kameros</b> 🤚 = energija leidžiama —<br>gyvatė lekia turbo greičiu su žiežirbom!<br><br>Apversk delną ir stebėk ⚡ juostą viršuje.</div>';
+  }
+}
+
+/* ================= KNN ================= */
 function toVec(lm){
   const w = lm[0], s = Math.hypot(lm[9].x-w.x, lm[9].y-w.y) || 1;
   return lm.flatMap(p=>[(p.x-w.x)/s,(p.y-w.y)/s,(p.z-w.z)/s]);
@@ -238,111 +396,201 @@ function toVec(lm){
 function classify(lm, k=7){
   if(examples.length<8) return null;
   const v = toVec(lm);
-  const near = examples.map(e=>({l:e.label, d:e.vec.reduce((s,x,i)=>s+(x-v[i])**2,0)}))
-    .sort((a,b)=>a.d-b.d).slice(0,k);
-  const votes = {}; near.forEach(n=>votes[n.l]=(votes[n.l]||0)+1);
-  const best = Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
+  const near = examples.map(e=>({l:e.label,d:e.vec.reduce((s,x,i)=>s+(x-v[i])**2,0)})).sort((a,b)=>a.d-b.d).slice(0,k);
+  const votes={}; near.forEach(n=>votes[n.l]=(votes[n.l]||0)+1);
+  const best=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
   return {label:best[0], conf:best[1]/k};
 }
 function raisedFingers(lm){
   let n=0;
-  [[8,6],[12,10],[16,14],[20,18]].forEach(([tip,pip])=>{ if(lm[tip].y < lm[pip].y) n++; });
-  if(Math.abs(lm[4].x-lm[17].x) > Math.abs(lm[3].x-lm[17].x)) n++;
+  [[8,6],[12,10],[16,14],[20,18]].forEach(([tip,pip])=>{ if(lm[tip].y<lm[pip].y) n++; });
+  if(Math.abs(lm[4].x-lm[17].x)>Math.abs(lm[3].x-lm[17].x)) n++;
   return n;
 }
-
-function buildGestList(){
-  const el = document.getElementById('gestList'); el.innerHTML='';
-  GESTAI.forEach(g=>{
-    const row = document.createElement('div'); row.className='gest-row'; row.id='row-'+g.key;
-    row.innerHTML = `<span class="em">${g.em}</span><span class="nm">${g.nm}</span>
-      <span class="cnt" id="cnt-${g.key}">0 pvz.</span>`;
-    const b = document.createElement('button'); b.textContent='● Įrašyti'; b.id='rec-'+g.key;
-    b.onclick = ()=>{ recording = g.key; recLeft = 20; b.classList.add('rec'); b.textContent='Rodyk gestą!'; };
-    row.appendChild(b); el.appendChild(row);
-  });
-}
-function updCounts(){
-  GESTAI.forEach(g=>{
-    const n = examples.filter(e=>e.label===g.key).length;
-    document.getElementById('cnt-'+g.key).textContent = n+' pvz.';
-  });
-  const total = examples.length;
-  const trained = new Set(examples.map(e=>e.label)).size;
-  document.getElementById('modelState').textContent = total? `🧠 Modelis: ${total} pvz. · ${trained} gestai` : '🧠 Modelis: tuščias';
-}
-function status(msg, ms=2500){
-  const el = document.getElementById('statusMsg');
-  el.textContent = msg; el.classList.remove('hidden');
-  clearTimeout(el._t); if(ms) el._t = setTimeout(()=>el.classList.add('hidden'), ms);
+function palmFacing(lm, handedness){
+  /* normal z from cross product (index_mcp-wrist) x (pinky_mcp-wrist); sign flips per hand */
+  const w=lm[0], a=lm[5], b=lm[17];
+  const v1={x:a.x-w.x,y:a.y-w.y,z:a.z-w.z}, v2={x:b.x-w.x,y:b.y-w.y,z:b.z-w.z};
+  const nz = v1.x*v2.y - v1.y*v2.x;
+  return (handedness==='Right'? nz<0 : nz>0);   /* true = palm toward camera */
 }
 
-let stableLabel = null, stableCount = 0;
+/* ================= TRICK ANIMS ================= */
+function setTrick(m){
+  if(trickMode===m) return;
+  trickMode=m; trickT=0;
+  const names={sokis:'💃 ŠOKIS!',vaivorykste:'🌈 VAIVORYKŠTĖ!',augti:'🍄 AUGIMAS!',suktis:'🌀 SUKTUKAS!',svyteti:'✨ ŠVYTĖJIMAS!',miegas:'😴 Miegelis…',idle:''};
+  const t=document.getElementById('trickName');
+  t.textContent=names[m]||''; t.style.opacity=(m==='idle')?0:1;
+  if(m!=='idle'&&m!=='miegas'){ burst(0xffd94a); addPoints(4,'trick-'+m,''); }
+  if(m==='augti') targetScale=1.7; else if(m!=='miegas'&&uiMode!=='dydis') targetScale=1;
+}
+function status(msg,ms=2600){
+  const el=document.getElementById('statusMsg');
+  el.textContent=msg; el.classList.remove('hidden');
+  clearTimeout(el._t); if(ms) el._t=setTimeout(()=>el.classList.add('hidden'),ms);
+}
+
+/* ================= RENDER LOOP ================= */
+const clock = new THREE.Clock();
+let turbo = 0;
+function animate(){
+  const t = clock.getElapsedTime();
+  trickT += .016;
+  tubes.forEach(tb=>{ tb.userData.core.rotation.y += .02; tb.userData.core.position.y = 2 + Math.sin(t*1.4+tb.position.x)*.25; });
+  holo.rotation.z += .004;
+  const speed = (trickMode==='miegas'?.25:trickMode==='sokis'?3.2:1.4) + turbo*3;
+  const amp = trickMode==='miegas'?.25:trickMode==='sokis'?1.1:.7;
+  for(let i=0;i<SEGS;i++){
+    const ph = t*speed - i*.42;
+    let x = Math.sin(ph)*amp + (trickMode==='suktis'?Math.cos(t*2-i*.3)*1.2:0);
+    let y = (trickMode==='sokis'?Math.abs(Math.sin(ph*1.5))*1.3:Math.sin(ph*.9)*.18)+.6+i*.005;
+    let z = -i*.52 + (trickMode==='suktis'?Math.sin(t*2-i*.3)*1.2:Math.cos(ph*.7)*.25);
+    /* drone offset */
+    if(droneOn){
+      x = x*.3 + droneTarget.x - i*.1*(droneTarget.x/3);
+      y = y*.4 + droneTarget.y;
+      z = z*.6 + droneTarget.z - 2.6;
+    }
+    segMeshes[i].position.set(x, Math.max(.3,y*(trickMode==='miegas'?.5:1)), z+2.6);
+    let h=(i/SEGS+hueShift)%1;
+    segMats[i].color.setHSL(h, trickMode==='miegas'?.15:.85, trickMode==='svyteti'?.72:.55);
+    segMats[i].emissive.setHSL(h,1,(trickMode==='svyteti'?.35:0)+turbo*.25);
+  }
+  if(trickMode==='vaivorykste') hueShift+=.012;
+  head.lookAt(camera3.position.x, head.position.y, camera3.position.z);
+  const cur=snake.scale.x, ns=cur+(targetScale-cur)*.06;
+  snake.scale.set(ns,ns,ns);
+  particles.children.slice().forEach(p=>{
+    p.position.add(p.userData.v); p.userData.v.y-=.003; p.userData.life-=.014;
+    p.material.opacity=p.userData.life; p.material.transparent=true;
+    if(p.userData.life<=0) particles.remove(p);
+  });
+  if(trickMode!=='idle'&&trickMode!=='miegas'&&trickT>4) setTrick('idle');
+  document.getElementById('energyFill').style.width = energy+'%';
+  renderer.render(scene, camera3);
+  requestAnimationFrame(animate);
+}
+animate();
+addEventListener('resize',()=>{camera3.aspect=wrap.clientWidth/wrap.clientHeight;camera3.updateProjectionMatrix();renderer.setSize(wrap.clientWidth,wrap.clientHeight);});
+
+/* ================= HAND LOOP ================= */
+const HAND_CONN = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+let handLm=null, video=null, lastFacing=null, stableLabel=null, stableCount=0;
+
+function drawLm(ctx, lms, w, h){
+  ctx.clearRect(0,0,w,h);
+  lms.forEach(lm=>{
+    ctx.strokeStyle='rgba(126,224,255,.9)'; ctx.lineWidth=2;
+    HAND_CONN.forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(lm[a].x*w,lm[a].y*h);ctx.lineTo(lm[b].x*w,lm[b].y*h);ctx.stroke();});
+    lm.forEach((p,i)=>{ctx.fillStyle=i===0?'#ffd94a':'#ff5470';ctx.beginPath();ctx.arc(p.x*w,p.y*h,i===0?5:3,0,7);ctx.fill();});
+  });
+}
+
 function onFrame(){
-  if(!handLm || !video || video.readyState<2){ requestAnimationFrame(onFrame); return; }
+  if(!handLm||!video||video.readyState<2){requestAnimationFrame(onFrame);return;}
   const res = handLm.detectForVideo(video, performance.now());
-  const info = document.getElementById('handInfo');
-  const fb = document.getElementById('fingerBig');
-  if(res.landmarks && res.landmarks.length){
-    lastLm = res.landmarks[0];
-    const fingers = raisedFingers(lastLm);
-    fb.textContent = fingers;
-    info.textContent = `✋ Ranka matoma · pirštų: ${fingers}`;
-    /* recording */
-    if(recording && recLeft>0){
-      examples.push({label:recording, vec:toVec(lastLm)});
-      recLeft--;
+  const info=document.getElementById('handInfo'), fb=document.getElementById('fingerBig');
+  const cv=document.getElementById('lmCanvas');
+  if(cv.width!==cv.clientWidth){cv.width=cv.clientWidth;cv.height=cv.clientHeight;}
+  const ctx=cv.getContext('2d');
+  const hands = res.landmarks||[];
+  drawLm(ctx,hands,cv.width,cv.height);
+
+  if(hands.length){
+    const lm = hands[0];
+    const fingers = raisedFingers(lm);
+    fb.textContent = hands.length===2 ? '✌🤲' : fingers;
+    info.textContent = hands.length===2 ? '🤲 DVI rankos matomos!' : `✋ Ranka matoma · pirštų: ${fingers}`;
+    addPoints(10,'first-hand','✋');
+
+    /* recording (any mode) */
+    if(recording&&recLeft>0){
+      examples.push({label:recording,vec:toVec(lm)}); recLeft--;
+      const c=document.getElementById('cnt-'+recording); if(c) c.textContent=examples.filter(e=>e.label===recording).length+' pvz.';
       if(recLeft===0){
-        const b = document.getElementById('rec-'+recording);
-        b.classList.remove('rec'); b.textContent='+ Dar';
-        status('✅ Išmokta! Gyvatė gavo naujų pavyzdžių.');
-        recording = null;
+        const b=document.getElementById('rec-'+recording); if(b){b.classList.remove('rec');b.textContent='+ Dar';}
+        status('✅ Išmokta!'); addPoints(10,'train-'+recording,'🎓');
+        const total=examples.length, tr=new Set(examples.map(e=>e.label)).size;
+        document.getElementById('modelState').textContent=`🧠 Modelis: ${total} pvz. · ${tr} gestai`;
+        recording=null;
       }
-      updCounts();
     }
-    /* classification */
-    const pred = classify(lastLm);
-    document.querySelectorAll('.gest-row').forEach(r=>r.classList.remove('active-pred'));
-    if(pred && !recording){
-      document.getElementById('confFill').style.width = Math.round(pred.conf*100)+'%';
-      const row = document.getElementById('row-'+pred.label);
-      if(row) row.classList.add('active-pred');
-      if(pred.label===stableLabel) stableCount++; else {stableLabel=pred.label; stableCount=1;}
-      if(stableCount>6 && pred.conf>=0.7) setMode(pred.label);
+
+    if(uiMode==='triukai' && !recording){
+      const pred = classify(lm);
+      document.querySelectorAll('.gest-row').forEach(r=>r.classList.remove('active-pred'));
+      if(pred){
+        document.getElementById('confFill').style.width=Math.round(pred.conf*100)+'%';
+        const row=document.getElementById('row-'+pred.label); if(row) row.classList.add('active-pred');
+        if(pred.label===stableLabel) stableCount++; else {stableLabel=pred.label;stableCount=1;}
+        if(stableCount>6&&pred.conf>=.7) setTrick(pred.label);
+      }
     }
+    else if(uiMode==='dydis'){
+      if(hands.length===2){
+        const d = Math.hypot(hands[0][0].x-hands[1][0].x, hands[0][0].y-hands[1][0].y);
+        targetScale = .5 + Math.min(1.9, d*3.2);
+        addPoints(12,'size-used','📏');
+      } else info.textContent='Parodyk ABI rankas 🤲';
+    }
+    else if(uiMode==='dronas'){
+      if(fingers>=4){
+        droneOn = true;
+        const px=lm[9].x, py=lm[9].y;
+        droneTarget.x = (0.5-px)*8;          /* mirrored */
+        droneTarget.y = (1-py)*3.4 + .4;
+        addPoints(12,'drone-used','🚁');
+        info.textContent='🚁 DRONAS SEKA DELNĄ';
+      } else if(fingers<=1){
+        if(droneOn){droneOn=false;status('🛬 Dronas nusileido');}
+      }
+    }
+    else if(uiMode==='energija'){
+      const facing = palmFacing(lm, (res.handedness&&res.handedness[0]&&res.handedness[0][0].categoryName)||'Right');
+      if(fingers>=4){
+        if(facing){ energy=Math.min(100,energy+.5); turbo=Math.max(0,turbo-.05); info.textContent='🔋 KRAUNASI…'; }
+        else {
+          if(energy>1){ energy=Math.max(0,energy-.8); turbo=Math.min(1,turbo+.08); info.textContent='⚡ TURBO!!!';
+            if(Math.random()<.2) burst(0x35c8ff,4,new THREE.Vector3(head.position.x,head.position.y,head.position.z)); }
+          else { turbo=Math.max(0,turbo-.05); info.textContent='🪫 Energija baigėsi — apversk delną!'; }
+        }
+        if(lastFacing!==null&&lastFacing!==facing) addPoints(12,'flip-used','⚡');
+        lastFacing=facing;
+      }
+    }
+    if(uiMode!=='energija') turbo=Math.max(0,turbo-.03);
   } else {
-    fb.textContent='–'; info.textContent='Ranka nematoma — pakelk ją prieš kamerą';
-    stableLabel=null; stableCount=0;
-    if(mode!=='idle' && mode!=='miegas') {} /* leave current trick running */
+    fb.textContent='–'; info.textContent='Ranka nematoma — pakelk prieš kamerą';
+    stableLabel=null; stableCount=0; droneOn=false; turbo=Math.max(0,turbo-.03);
   }
   requestAnimationFrame(onFrame);
 }
 
 document.getElementById('startBtn').onclick = async ()=>{
-  const note = document.getElementById('loaderNote');
+  const note=document.getElementById('loaderNote');
   try{
-    note.textContent = '🧠 Kraunamas rankų atpažinimo modelis…';
-    const files = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
-    handLm = await HandLandmarker.createFromOptions(files, {
-      baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task', delegate:'GPU'},
-      runningMode:'VIDEO', numHands:1
+    note.textContent='🧠 Kraunamas rankų atpažinimo modelis…';
+    const files=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+    handLm=await HandLandmarker.createFromOptions(files,{
+      baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},
+      runningMode:'VIDEO',numHands:2
     });
-    note.textContent = '📷 Prašom kameros leidimo…';
-    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user', width:480}, audio:false});
-    video = document.getElementById('cam'); video.srcObject = stream;
-    document.getElementById('introPanel').classList.add('hidden');
-    document.getElementById('camPanel').classList.remove('hidden');
-    document.getElementById('trainPanel').classList.remove('hidden');
-    buildGestList(); updCounts();
-    status('Išmokyk gyvatę pirmo triuko — spausk „● Įrašyti" ir rodyk gestą! 🖐', 5000);
+    note.textContent='📷 Prašom kameros leidimo…';
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:480},audio:false});
+    video=document.getElementById('cam'); video.srcObject=stream;
+    ['introPanel'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    ['camPanel','rightPanel','progressPanel','modeTabs'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
+    buildTabs(); buildUnlockList(); renderModePanel();
+    status('Išmokyk gyvatę pirmo triuko — „● Įrašyti" ir rodyk gestą! 🖐',5000);
     requestAnimationFrame(onFrame);
   }catch(e){
-    note.textContent = '⚠️ Nepavyko: ' + (e.name==='NotAllowedError'?'kameros leidimas atmestas.':'reikia interneto modeliui parsisiųsti.') + ' Bandyk dar kartą.';
+    note.textContent='⚠️ Nepavyko: '+(e.name==='NotAllowedError'?'kameros leidimas atmestas.':'reikia interneto modeliui parsisiųsti.')+' Bandyk dar.';
   }
 };
-document.getElementById('mbtn').onclick = ()=>document.getElementById('mpanel').classList.toggle('on');
+document.getElementById('mbtn').onclick=()=>document.getElementById('mpanel').classList.toggle('on');
 </script>
 
-<!-- PA1 v2 DEMO · Gestų treniruoklė · Neuron 2026-08-14 · reikalauja interneto (CDN: three.js + MediaPipe) -->
+<!-- PA1 v2.1 · AInimalų Laboratorija · Neuron 2026-08-14 · CDN: three.js + MediaPipe (reikia interneto) -->
 </body>
 </html>
