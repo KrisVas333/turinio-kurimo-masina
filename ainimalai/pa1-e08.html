@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="lt">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PA1 · E08 — Spektrinės Gyvatės treniruotė</title>
+<style>
+/* ====== BAZĖ ====== */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080d2b; --bg2:#101745; --panel:#18205c; --panel2:#1f2a75; --line:#3b49bd;
+  --cy:#2fe4ff; --gr:#2fdb7a; --rd:#ff4f6b; --go:#ffd23f; --vi:#b57bff;
+  --tx:#f4f7ff; --mut:#a4b0f0;
+  --hud:70px;
+}
+html,body{height:100%;width:100%}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color:var(--tx); overflow:hidden; position:relative;
+  background:
+    radial-gradient(1200px 700px at 12% 8%, #22307f 0%, rgba(34,48,127,0) 60%),
+    radial-gradient(900px 600px at 90% 90%, #4a1f7a 0%, rgba(74,31,122,0) 60%),
+    linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%);
+}
+body::before{ /* žvaigždės */
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.55;
+  background-image:
+    radial-gradient(2px 2px at 12% 22%, #fff, transparent),
+    radial-gradient(2px 2px at 27% 68%, #cfe4ff, transparent),
+    radial-gradient(1.6px 1.6px at 41% 14%, #fff, transparent),
+    radial-gradient(2px 2px at 58% 82%, #ffe9a8, transparent),
+    radial-gradient(1.6px 1.6px at 72% 34%, #fff, transparent),
+    radial-gradient(2px 2px at 84% 58%, #b9f6ff, transparent),
+    radial-gradient(1.6px 1.6px at 92% 18%, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 6% 88%, #fff, transparent);
+  animation:tw 5s ease-in-out infinite alternate;
+}
+@keyframes tw{from{opacity:.35}to{opacity:.75}}
+
+/* ====== HUD ====== */
+#hud{
+  height:var(--hud);display:flex;align-items:center;gap:14px;
+  padding:0 16px;background:rgba(8,12,40,.72);border-bottom:3px solid var(--line);
+  position:relative;z-index:20;backdrop-filter:blur(4px);
+}
+.code{font-weight:900;font-size:clamp(14px,1.5vw,20px);letter-spacing:1px;
+  background:var(--cy);color:#062033;padding:7px 12px;border-radius:10px;white-space:nowrap}
+.title-mini{min-width:0;flex-shrink:1;font-weight:800;font-size:clamp(12px,1.3vw,18px);color:var(--mut);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+#dots{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:nowrap}
+.dot{width:14px;height:14px;border-radius:50%;background:#2b357e;border:2px solid #4656cc;flex:0 0 auto}
+.dot.done{background:var(--gr);border-color:#9dffcf}
+.dot.now{background:var(--go);border-color:#fff;transform:scale(1.35);box-shadow:0 0 12px var(--go)}
+.score{font-weight:900;font-size:clamp(15px,1.7vw,24px);color:var(--go);white-space:nowrap}
+.navbtn{font:inherit;font-weight:900;font-size:clamp(13px,1.4vw,19px);cursor:pointer;
+  background:var(--panel2);color:var(--tx);border:3px solid var(--line);border-radius:12px;padding:8px 12px}
+.navbtn:hover{background:var(--line)}
+.navbtn:active{transform:translateY(2px)}
+
+/* ====== EKRANAI ====== */
+#stage{height:calc(100% - var(--hud));position:relative;z-index:10}
+.screen{display:none;height:100%;padding:18px 22px 16px;flex-direction:column;gap:14px}
+.screen.on{display:flex;animation:fadein .35s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+h1{font-size:clamp(26px,4.2vw,58px);font-weight:900;line-height:1.05;letter-spacing:-.5px}
+h2{font-size:clamp(20px,2.8vw,38px);font-weight:900;line-height:1.1}
+.big{font-size:clamp(20px,2.6vw,36px);font-weight:800;line-height:1.25}
+.mid{font-size:clamp(16px,1.9vw,26px);font-weight:700;line-height:1.3}
+.small{font-size:clamp(13px,1.4vw,19px);font-weight:600;color:var(--mut)}
+.center{align-items:center;justify-content:center;text-align:center}
+
+.card{background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);
+  border:4px solid var(--line);border-radius:22px;padding:18px 20px;box-shadow:0 10px 0 rgba(0,0,0,.25)}
+
+/* ====== TITULINIS ====== */
+#sc-title .logo{font-size:clamp(46px,9vw,120px);line-height:1;filter:drop-shadow(0 0 24px var(--cy))}
+.startbtn{font:inherit;font-weight:900;font-size:clamp(22px,3vw,40px);cursor:pointer;
+  background:linear-gradient(180deg,#3ef29a,#12a862);color:#04240f;border:0;border-radius:20px;
+  padding:16px 40px;box-shadow:0 8px 0 #0a6b3d;margin-top:8px}
+.startbtn:active{transform:translateY(6px);box-shadow:0 2px 0 #0a6b3d}
+
+/* ====== KOMIKSAI ====== */
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;flex:1;min-height:0}
+.panel{background:linear-gradient(180deg,#1a2264,#141b52);border:4px solid var(--line);
+  border-radius:20px;padding:12px;display:flex;flex-direction:column;align-items:center;
+  justify-content:space-between;gap:8px;min-height:0;overflow:hidden}
+.panel .art{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:0;width:100%}
+.panel .art svg{height:100%;max-height:100%;width:auto;max-width:100%}
+.cap{font-size:clamp(14px,1.6vw,23px);font-weight:800;text-align:center;line-height:1.2}
+.bubble{position:relative;background:#fff;color:#12183f;border-radius:16px;padding:8px 12px;
+  font-weight:900;font-size:clamp(12px,1.3vw,19px);text-align:center;max-width:96%}
+.bubble::after{content:"";position:absolute;left:24px;bottom:-12px;border:8px solid transparent;border-top-color:#fff}
+
+/* ====== TRENIRUOTĖS EKRANAS ====== */
+.train{display:grid;grid-template-columns:minmax(300px,38%) 1fr;gap:18px;flex:1;min-height:0}
+.snakeBox{display:flex;flex-direction:column;gap:10px;min-height:0}
+.snakeStage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 60%, #23306f 0%, rgba(20,27,82,0) 70%);
+  border:4px solid var(--line);border-radius:22px;position:relative;overflow:hidden}
+.snakeStage svg{width:100%;height:100%}
+.grid-floor{position:absolute;inset:auto 0 0 0;height:38%;opacity:.35;
+  background-image:linear-gradient(#4b5bd6 2px,transparent 2px),linear-gradient(90deg,#4b5bd6 2px,transparent 2px);
+  background-size:44px 30px;transform:perspective(240px) rotateX(58deg);transform-origin:bottom}
+.meters{display:flex;flex-direction:column;gap:8px}
+.meter{display:flex;align-items:center;gap:10px}
+.meter .lbl{font-weight:900;font-size:clamp(12px,1.3vw,18px);width:38%;white-space:nowrap}
+.bar{flex:1;height:20px;background:#101744;border:3px solid var(--line);border-radius:12px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:8px;transition:width .6s cubic-bezier(.2,.9,.3,1)}
+.bar.mood i{background:linear-gradient(90deg,#ffd23f,#ff8a3d)}
+.bar.skill i{background:linear-gradient(90deg,#2fe4ff,#7b5bff)}
+
+.cardCol{display:flex;flex-direction:column;gap:12px;min-height:0}
+.roundTag{display:inline-block;background:var(--vi);color:#1a0736;font-weight:900;
+  padding:6px 14px;border-radius:999px;font-size:clamp(13px,1.5vw,20px);align-self:flex-start}
+.exCard{flex:0 0 auto;background:#fff;color:#101744;border-radius:22px;padding:18px 22px;
+  border:6px solid var(--go);box-shadow:0 10px 0 rgba(0,0,0,.3);display:flex;gap:14px;align-items:center}
+.exCard .ico{font-size:clamp(34px,5vw,66px);line-height:1}
+.exCard .txt{font-size:clamp(19px,2.6vw,40px);font-weight:900;line-height:1.15}
+.votes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.vbtn{font:inherit;cursor:pointer;border:0;border-radius:20px;padding:16px 10px;font-weight:900;
+  font-size:clamp(18px,2.4vw,34px);color:#06210f;display:flex;flex-direction:column;align-items:center;gap:4px}
+.vbtn .k{font-size:clamp(11px,1.1vw,15px);font-weight:800;opacity:.75}
+.vgood{background:linear-gradient(180deg,#57f7a6,#16b567);box-shadow:0 8px 0 #0b7742}
+.vbad{background:linear-gradient(180deg,#ff8399,#e02745);color:#3a0410;box-shadow:0 8px 0 #8d0f24}
+.vbtn:active{transform:translateY(6px);box-shadow:0 2px 0 rgba(0,0,0,.4)}
+.vbtn[disabled]{opacity:.35;cursor:default;transform:none}
+.fb{flex:1;min-height:0;overflow:auto;border-radius:20px;padding:14px 18px;display:none;
+  border:4px solid transparent}
+.fb.on{display:block;animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.92);opacity:0}to{transform:none;opacity:1}}
+.fb.ok{background:rgba(47,219,122,.16);border-color:var(--gr)}
+.fb.no{background:rgba(255,79,107,.16);border-color:var(--rd)}
+.fb h3{font-size:clamp(19px,2.4vw,34px);font-weight:900;margin-bottom:6px}
+.fb p{font-size:clamp(15px,1.8vw,26px);font-weight:700;line-height:1.3}
+.act{font:inherit;font-weight:900;font-size:clamp(16px,1.9vw,26px);cursor:pointer;margin-top:12px;
+  background:linear-gradient(180deg,#7fe6ff,#1fa8d8);color:#052434;border:0;border-radius:16px;
+  padding:12px 22px;box-shadow:0 6px 0 #0d6c8e}
+.act:active{transform:translateY(4px);box-shadow:0 2px 0 #0d6c8e}
+.act.gold{background:linear-gradient(180deg,#ffe27a,#f0a91b);color:#3a2400;box-shadow:0 6px 0 #9c6a00}
+
+/* ====== KAMERA ====== */
+#camPanel{display:flex;flex-direction:column;gap:8px}
+#camPanel.big{width:min(560px,90%)}
+#camPanel.side{width:100%}
+#camStore{display:none}
+.camView{position:relative;border:4px solid var(--line);border-radius:18px;overflow:hidden;background:#000;
+  aspect-ratio:4/3}
+#camPanel.side .camView{aspect-ratio:auto;height:min(20vh,180px)}
+#camPanel.side .halfInfo{display:none}
+#video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
+.camOff{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:var(--mut);font-weight:800;text-align:center;padding:10px;font-size:clamp(12px,1.4vw,18px)}
+.vbars{display:flex;flex-direction:column;gap:6px}
+.vbrow{display:flex;align-items:center;gap:8px;font-weight:900;font-size:clamp(12px,1.3vw,18px)}
+.vbrow .bar{height:22px}
+.vbrow .bar.g i{background:linear-gradient(90deg,#3bf59a,#12a862)}
+.vbrow .bar.r i{background:linear-gradient(90deg,#ff8ba0,#e02745)}
+.vbrow .pc{width:56px;text-align:right}
+.camBtns{display:flex;gap:8px;flex-wrap:wrap}
+.cbtn{font:inherit;font-weight:900;font-size:clamp(12px,1.3vw,18px);cursor:pointer;border:3px solid var(--line);
+  background:var(--panel2);color:var(--tx);border-radius:14px;padding:8px 12px}
+.cbtn:hover{background:var(--line)}
+#camConfirm{display:none;background:linear-gradient(180deg,#ffe27a,#f0a91b);color:#3a2400;border-color:#9c6a00}
+body[data-phase="train"] #camConfirm.avail{display:block}
+.camNote{font-size:clamp(11px,1.2vw,16px);color:var(--mut);font-weight:700}
+.halfInfo{font-size:clamp(11px,1.2vw,16px);color:var(--mut);font-weight:800;text-align:center}
+
+/* ====== PASIRINKIMO KORTELĖS (howto) ====== */
+.howGrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;flex:1;min-height:0}
+.howCol{display:flex;flex-direction:column;align-items:center;gap:12px;justify-content:center;min-height:0;overflow:auto}
+.cardsig{display:flex;gap:16px}
+.sig{width:clamp(60px,9vw,110px);height:clamp(84px,12vw,150px);border-radius:14px;border:5px solid #fff;
+  display:flex;align-items:flex-end;justify-content:center;font-weight:900;color:#fff;
+  font-size:clamp(12px,1.4vw,20px);padding-bottom:6px;box-shadow:0 8px 0 rgba(0,0,0,.35)}
+.sig.g{background:#16b567}.sig.r{background:#e02745}
+
+/* ====== FINALAS ====== */
+.badge{width:clamp(150px,22vw,260px);height:clamp(150px,22vw,260px);animation:spin 9s linear infinite}
+.badge svg{width:100%;height:100%}
+#snakeHost3 svg{width:100%;height:100%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stats{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.stat{background:var(--panel);border:4px solid var(--line);border-radius:18px;padding:10px 18px;text-align:center}
+.stat b{display:block;font-size:clamp(22px,3vw,44px);color:var(--go)}
+.stat span{font-size:clamp(11px,1.2vw,16px);font-weight:800;color:var(--mut)}
+
+/* ====== MOKYTOJO UŽRAŠAI ====== */
+#mBtn{position:fixed;left:14px;bottom:14px;z-index:60;width:52px;height:52px;border-radius:50%;
+  border:3px solid var(--go);background:#1b2260;color:var(--go);font-weight:900;font-size:22px;cursor:pointer;
+  box-shadow:0 4px 0 rgba(0,0,0,.4)}
+#mPanel{position:fixed;left:14px;bottom:76px;z-index:60;width:min(460px,62vw);display:none;
+  background:#141b52;border:4px solid var(--go);border-radius:18px;padding:14px 16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#mPanel.on{display:block}
+#mPanel h4{color:var(--go);font-size:15px;font-weight:900;margin-bottom:6px;letter-spacing:1px}
+#mPanel p{font-size:clamp(13px,1.4vw,17px);font-weight:700;line-height:1.35}
+
+/* ====== KONFETI ====== */
+.conf{position:fixed;top:-20px;width:12px;height:18px;z-index:70;pointer-events:none;border-radius:3px;
+  animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.9}}
+
+/* ====== GYVATĖ ====== */
+.seg{animation:segwave var(--spd,1.8s) ease-in-out infinite;animation-delay:var(--d,0s)}
+.headg{animation:segwave var(--spd,1.8s) ease-in-out infinite;animation-delay:var(--hd,.7s)}
+@keyframes segwave{0%,100%{transform:translateY(0)}50%{transform:translateY(var(--amp,-14px))}}
+.sparkle{animation:twk 1.4s ease-in-out infinite}
+@keyframes twk{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
+.shake{animation:shk .5s ease}
+@keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.loopy{animation:loopy 1.1s linear infinite}
+@keyframes loopy{to{transform:rotate(360deg)}}
+
+@media (max-width:900px){
+  .train{grid-template-columns:1fr;grid-template-rows:minmax(160px,34%) 1fr}
+  .strip{grid-template-columns:1fr;overflow:auto}
+  .howGrid{grid-template-columns:1fr;overflow:auto}
+}
+</style>
+
+<header id="hud">
+  <span class="code">PA1 · E08</span>
+  <span class="title-mini">SPEKTRINĖS GYVATĖS TRENIRUOTĖ</span>
+  <span id="dots"></span>
+  <span class="score">⭐ <span id="pts">0</span></span>
+  <button class="navbtn" id="bBack" title="Atgal (←)">◀</button>
+  <button class="navbtn" id="bNext" title="Toliau (→)">TOLIAU ▶</button>
+  <button class="navbtn" id="bReset" title="Iš naujo (R)">↻</button>
+</header>
+
+<main id="stage">
+
+  <!-- 0 TITULINIS -->
+  <section class="screen center" id="sc-title">
+    <div class="logo">🐍✨</div>
+    <h1>SPEKTRINĖS GYVATĖS<br>TRENIRUOTĖ</h1>
+    <p class="big" style="color:var(--mut)">Kaip išmokyti dirbtinį intelektą?</p>
+    <button class="startbtn" id="goStart">▶ PRADEDAM</button>
+    <p class="small" style="margin-top:10px">Mokytojui: → toliau · ← atgal · R iš naujo · M užrašai</p>
+  </section>
+
+  <!-- 1 ISTORIJA -->
+  <section class="screen" id="sc-story1">
+    <h2>1 · MAJA IR JOS AINIMALAS</h2>
+    <div class="strip">
+      <div class="panel"><div class="art" id="a11"></div><div class="cap">Maja sukūrė Spektrinę Gyvatę.</div></div>
+      <div class="panel"><div class="art" id="a12"></div><div class="cap">Ji švietė VISOMIS spalvomis.</div></div>
+      <div class="panel"><div class="art" id="a13"></div><div class="bubble">Tu — gražiausia!</div><div class="cap">Visi draugavo.</div></div>
+    </div>
+  </section>
+
+  <section class="screen" id="sc-story2">
+    <h2>2 · KAS ATSITIKO?</h2>
+    <div class="strip">
+      <div class="panel"><div class="art" id="a21"></div><div class="cap">Gyvatė pasikeitė.</div></div>
+      <div class="panel"><div class="art" id="a22"></div><div class="cap">Ji slepiasi nuo draugų.</div></div>
+      <div class="panel"><div class="art" id="a23"></div><div class="bubble">Kodėl ji bijo?</div><div class="cap">Bugas ir Bliksonas liūdi.</div></div>
+    </div>
+  </section>
+
+  <section class="screen" id="sc-story3">
+    <h2>3 · COGNITRONO ATSAKYMAS</h2>
+    <div class="strip">
+      <div class="panel"><div class="art" id="a31"></div><div class="bubble">DI mokosi iš PAVYZDŽIŲ.</div><div class="cap">CogniTronas paaiškina.</div></div>
+      <div class="panel"><div class="art" id="a32"></div><div class="cap">Gyvatė gavo BLOGŲ pavyzdžių.</div></div>
+      <div class="panel"><div class="art" id="a33"></div><div class="bubble">Duokim gerų!</div><div class="cap">Einam į treniruočių zoną.</div></div>
+    </div>
+  </section>
+
+  <!-- 4 KAIP BALSUOJAM -->
+  <section class="screen" id="sc-howto">
+    <h2>KAIP KLASĖ BALSUOJA?</h2>
+    <div class="howGrid">
+      <div class="howCol card">
+        <div class="big">🖐 RANKOMIS</div>
+        <div class="cardsig">
+          <div class="sig g">GERAS</div>
+          <div class="sig r">BLOGAS</div>
+        </div>
+        <p class="mid" style="text-align:center">Vaikai kelia rankas.<br>Mokytojas spaudžia mygtuką.</p>
+        <p class="small">Veikia visada. Kameros nereikia.</p>
+      </div>
+      <div class="howCol card">
+        <div class="big">📷 SPALVOTOS KORTELĖS</div>
+        <div id="camHostBig" style="width:100%;display:flex;justify-content:center"></div>
+        <p class="small" style="text-align:center">Vaikai kelia ŽALIAS arba RAUDONAS korteles.<br>Kompiuteris suskaičiuoja spalvas.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 KORTELĖ (kartotinis) -->
+  <section class="screen" id="sc-card">
+    <div class="train">
+      <div class="snakeBox">
+        <div class="snakeStage"><div class="grid-floor"></div><div id="snakeHost" style="width:100%;height:100%"></div></div>
+        <div class="meters">
+          <div class="meter"><span class="lbl">😊 NUOTAIKA</span><span class="bar mood"><i id="mMood"></i></span></div>
+          <div class="meter"><span class="lbl">🧠 ĮGŪDIS</span><span class="bar skill"><i id="mSkill"></i></span></div>
+        </div>
+        <div id="camHostSide"></div>
+      </div>
+      <div class="cardCol">
+        <span class="roundTag" id="rTag">RAUNDAS 1</span>
+        <div class="exCard"><span class="ico" id="cIco">💬</span><span class="txt" id="cTxt"></span></div>
+        <div class="votes">
+          <button class="vbtn vgood" id="vG">👍 GERAS<span class="k">klavišas G arba 1</span></button>
+          <button class="vbtn vbad" id="vB">👎 BLOGAS<span class="k">klavišas B arba 2</span></button>
+        </div>
+        <div class="fb" id="fb">
+          <h3 id="fbT"></h3>
+          <p id="fbP"></p>
+          <button class="act" id="fbBtn"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 PERTRENIRAVIMAS -->
+  <section class="screen" id="sc-over">
+    <div class="train">
+      <div class="snakeBox">
+        <div class="snakeStage"><div class="grid-floor"></div><div id="snakeHost2" style="width:100%;height:100%"></div></div>
+        <div class="meters">
+          <div class="meter"><span class="lbl">🌈 ĮVAIROVĖ</span><span class="bar skill"><i id="mVar"></i></span></div>
+        </div>
+      </div>
+      <div class="cardCol">
+        <span class="roundTag" style="background:var(--rd);color:#fff">BANDYMAS</span>
+        <h2 id="ovT">O JEI VISI PAVYZDŽIAI VIENODI?</h2>
+        <p class="big" id="ovP">Duokim gyvatei 10 kartų TĄ PATĮ.</p>
+        <div id="ovBubble" class="exCard" style="display:none;border-color:var(--rd)">
+          <span class="ico">🐍</span><span class="txt">Labas. Labas. Labas. Labas.</span>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="act" id="ovGo">🔁 DUOTI 10 VIENODŲ</button>
+          <button class="act gold" id="ovFix" style="display:none">🌈 DUOTI ĮVAIRIŲ</button>
+        </div>
+        <div class="fb" id="ovFb"><h3 id="ovFbT"></h3><p id="ovFbP"></p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 FINALAS -->
+  <section class="screen center" id="sc-final">
+    <h1 style="color:var(--gr)">GYVATĖ VĖL DRAUGIŠKA! 🎉</h1>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center">
+      <div id="snakeHost3" style="width:min(420px,42vw);height:min(240px,30vh)"></div>
+      <div class="badge" id="badgeHost"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="fCorrect">0/6</b><span>TEISINGI SPRENDIMAI</span></div>
+      <div class="stat"><b id="fPts">0</b><span>TAŠKAI</span></div>
+      <div class="stat"><b>🏅</b><span>TRENERIO ŽENKLIUKAS</span></div>
+    </div>
+    <p class="big" style="max-width:900px">DI mokosi iš pavyzdžių.<br>GERI pavyzdžiai — geras draugas.</p>
+    <p class="mid" style="color:var(--cy)">Kitą kartą: 🎨 REKLAMOS DIRBTUVĖS</p>
+  </section>
+
+</main>
+
+<!-- kameros modulis (keliauja tarp ekranų) -->
+<div id="camStore">
+  <div id="camPanel" class="big">
+    <div class="camView">
+      <video id="video" playsinline muted autoplay></video>
+      <div class="camOff" id="camOff">Kamera išjungta.<br>Spausk &#8222;Įjungti kamerą&#8220;.</div>
+    </div>
+    <div class="vbars">
+      <div class="vbrow"><span>🟩</span><span class="bar g"><i id="bg"></i></span><span class="pc" id="pg">0%</span></div>
+      <div class="vbrow"><span>🟥</span><span class="bar r"><i id="br"></i></span><span class="pc" id="pr">0%</span></div>
+      <div class="halfInfo" id="halfInfo">kairė: – · dešinė: –</div>
+    </div>
+    <div class="camBtns">
+      <button class="cbtn" id="camOn">📷 Įjungti kamerą</button>
+      <button class="cbtn" id="camStopB">⏹ Išjungti</button>
+      <button class="cbtn" id="camConfirm">✅ UŽSKAITYTI BALSĄ</button>
+    </div>
+    <div class="camNote" id="camNote">Nieko neįrašom ir nesiunčiam. Viskas lieka kompiuteryje.</div>
+  </div>
+</div>
+
+<button id="mBtn" title="Mokytojo užrašai (M)">M</button>
+<div id="mPanel"><h4>MOKYTOJO UŽRAŠAI</h4><p id="mText"></p></div>
+
+<script>
+"use strict";
+
+/* ============ CHARAKTERIAI (piešiam patys) ============ */
+function kid(o){
+  var hair="";
+  if(o.hair==="buns"){
+    hair='<circle cx="26" cy="34" r="14" fill="'+o.hc+'"/><circle cx="94" cy="34" r="14" fill="'+o.hc+'"/>'+
+         '<path d="M28 50 A32 32 0 0 1 92 50 L92 34 A32 30 0 0 0 28 34 Z" fill="'+o.hc+'"/>';
+  } else if(o.hair==="long"){
+    hair='<path d="M26 52 A34 34 0 0 1 94 52 L96 104 L82 104 L82 56 L38 56 L38 104 L24 104 Z" fill="'+o.hc+'"/>';
+  } else {
+    hair='<path d="M28 48 L38 26 L46 42 L58 20 L68 42 L78 26 L92 50 Z" fill="'+o.hc+'"/>';
+  }
+  var mouth = o.sad ? '<path d="M50 66 Q60 58 70 66" stroke="#7a3b2a" stroke-width="4" fill="none" stroke-linecap="round"/>'
+                    : '<path d="M50 62 Q60 74 70 62" stroke="#7a3b2a" stroke-width="4" fill="none" stroke-linecap="round"/>';
+  return '<svg viewBox="0 0 120 160" aria-hidden="true">'+
+    '<ellipse cx="60" cy="152" rx="32" ry="6" fill="rgba(0,0,0,.35)"/>'+
+    '<rect x="18" y="88" width="14" height="42" rx="7" fill="'+o.shirt+'"/>'+
+    '<rect x="88" y="88" width="14" height="42" rx="7" fill="'+o.shirt+'"/>'+
+    '<circle cx="25" cy="132" r="8" fill="'+o.skin+'"/><circle cx="95" cy="132" r="8" fill="'+o.skin+'"/>'+
+    '<rect x="30" y="80" width="60" height="64" rx="24" fill="'+o.shirt+'"/>'+
+    (o.bolt?'<path d="M64 94 L52 116 L61 116 L56 134 L72 110 L63 110 Z" fill="#ffd23f"/>':'')+
+    '<circle cx="60" cy="52" r="32" fill="'+o.skin+'"/>'+
+    hair+
+    '<ellipse cx="48" cy="52" rx="7" ry="8" fill="#fff"/><ellipse cx="72" cy="52" rx="7" ry="8" fill="#fff"/>'+
+    '<circle cx="49" cy="53" r="4" fill="#22243f"/><circle cx="73" cy="53" r="4" fill="#22243f"/>'+
+    '<circle cx="50.5" cy="51" r="1.4" fill="#fff"/><circle cx="74.5" cy="51" r="1.4" fill="#fff"/>'+
+    '<circle cx="38" cy="64" r="5" fill="rgba(255,120,140,.45)"/><circle cx="82" cy="64" r="5" fill="rgba(255,120,140,.45)"/>'+
+    mouth+
+  '</svg>';
+}
+var MAJA={hair:"buns",hc:"#7a35c9",skin:"#ffd6b0",shirt:"#ffcf3d"};
+var LUNA={hair:"long",hc:"#5fd8ff",skin:"#f6c79b",shirt:"#2fd1c0"};
+var LEO ={hair:"spiky",hc:"#ff8a3d",skin:"#ffd6b0",shirt:"#3a6bff",bolt:true};
+var NEO ={hair:"spiky",hc:"#5b3b1f",skin:"#f0c396",shirt:"#e03a52",bolt:true};
+
+function bugas(){
+  return '<svg viewBox="0 0 120 110" aria-hidden="true">'+
+   '<ellipse cx="60" cy="104" rx="30" ry="5" fill="rgba(0,0,0,.35)"/>'+
+   '<path d="M30 42 L14 24 M90 42 L106 24" stroke="#2fdb7a" stroke-width="5" stroke-linecap="round"/>'+
+   '<circle cx="14" cy="22" r="5" fill="#ffd23f"/><circle cx="106" cy="22" r="5" fill="#ffd23f"/>'+
+   '<ellipse cx="60" cy="66" rx="38" ry="32" fill="#2fdb7a"/>'+
+   '<path d="M60 34 L60 98" stroke="#0f7a45" stroke-width="4"/>'+
+   '<circle cx="40" cy="58" r="6" fill="#0f7a45"/><circle cx="80" cy="58" r="6" fill="#0f7a45"/>'+
+   '<circle cx="46" cy="80" r="5" fill="#0f7a45"/><circle cx="76" cy="80" r="5" fill="#0f7a45"/>'+
+   '<ellipse cx="60" cy="34" rx="20" ry="17" fill="#1fa862"/>'+
+   '<ellipse cx="52" cy="32" rx="6" ry="7" fill="#fff"/><ellipse cx="68" cy="32" rx="6" ry="7" fill="#fff"/>'+
+   '<circle cx="53" cy="33" r="3.4" fill="#0d2417"/><circle cx="69" cy="33" r="3.4" fill="#0d2417"/>'+
+   '<path d="M52 42 Q60 48 68 42" stroke="#0d2417" stroke-width="3" fill="none" stroke-linecap="round"/>'+
+  '</svg>';
+}
+function bliksonas(){
+  return '<svg viewBox="0 0 140 110" aria-hidden="true">'+
+   '<ellipse cx="70" cy="104" rx="40" ry="5" fill="rgba(0,0,0,.35)"/>'+
+   '<rect x="30" y="46" width="66" height="40" rx="16" fill="#4ec3ff"/>'+
+   '<rect x="36" y="82" width="12" height="20" rx="6" fill="#3aa8e0"/>'+
+   '<rect x="78" y="82" width="12" height="20" rx="6" fill="#3aa8e0"/>'+
+   '<path d="M96 62 L124 40 L118 60 L132 56 L104 82 Z" fill="#ffd23f"/>'+
+   '<circle cx="36" cy="40" r="26" fill="#5fd0ff"/>'+
+   '<path d="M18 24 L14 4 L34 16 Z" fill="#3aa8e0"/><path d="M54 24 L58 4 L38 16 Z" fill="#3aa8e0"/>'+
+   '<ellipse cx="28" cy="38" rx="6" ry="7" fill="#fff"/><ellipse cx="46" cy="38" rx="6" ry="7" fill="#fff"/>'+
+   '<circle cx="29" cy="39" r="3.4" fill="#0d2030"/><circle cx="47" cy="39" r="3.4" fill="#0d2030"/>'+
+   '<ellipse cx="37" cy="50" rx="7" ry="5" fill="#0d2030"/>'+
+   '<path d="M30 58 Q37 66 44 58" stroke="#0d2030" stroke-width="3" fill="none" stroke-linecap="round"/>'+
+  '</svg>';
+}
+function cogni(){
+  return '<svg viewBox="0 0 130 150" aria-hidden="true">'+
+   '<defs><radialGradient id="cg" cx="50%" cy="40%"><stop offset="0%" stop-color="#a9f2ff" stop-opacity=".95"/>'+
+   '<stop offset="100%" stop-color="#2fe4ff" stop-opacity=".25"/></radialGradient></defs>'+
+   '<path d="M20 148 L110 148 L88 120 L42 120 Z" fill="rgba(47,228,255,.22)"/>'+
+   '<ellipse cx="65" cy="120" rx="46" ry="8" fill="rgba(47,228,255,.35)"/>'+
+   '<circle cx="65" cy="62" r="46" fill="url(#cg)"/>'+
+   '<ellipse cx="65" cy="62" rx="46" ry="16" fill="none" stroke="#7ff0ff" stroke-width="2" opacity=".7"/>'+
+   '<ellipse cx="65" cy="62" rx="18" ry="46" fill="none" stroke="#7ff0ff" stroke-width="2" opacity=".5"/>'+
+   '<rect x="34" y="52" width="62" height="20" rx="10" fill="#062a3a" opacity=".8"/>'+
+   '<circle cx="50" cy="62" r="6" fill="#2fe4ff"/><circle cx="80" cy="62" r="6" fill="#2fe4ff"/>'+
+   '<path d="M48 86 Q65 98 82 86" stroke="#0a3d52" stroke-width="4" fill="none" stroke-linecap="round"/>'+
+  '</svg>';
+}
+function medal(){
+  return '<svg viewBox="0 0 200 200" aria-hidden="true">'+
+   '<circle cx="100" cy="100" r="88" fill="#1b2260" stroke="#ffd23f" stroke-width="8"/>'+
+   '<circle cx="100" cy="100" r="70" fill="none" stroke="#2fe4ff" stroke-width="4" stroke-dasharray="10 8"/>'+
+   '<path d="M100 34 L116 78 L162 78 L125 105 L139 149 L100 122 L61 149 L75 105 L38 78 L84 78 Z" fill="#ffd23f"/>'+
+   '<circle cx="100" cy="100" r="26" fill="#101744"/>'+
+   '<text x="100" y="110" font-size="30" text-anchor="middle" fill="#2fdb7a" font-family="system-ui" font-weight="900">🐍</text>'+
+  '</svg>';
+}
+
+/* ============ GYVATĖ ============ */
+var snake={mood:25, skill:20, variety:100, sad:false};
+function renderSnake(host){
+  if(!host) return;
+  var mood=Math.max(0,Math.min(100,snake.mood));
+  var skill=Math.max(0,Math.min(100,snake.skill));
+  var vary=Math.max(0,Math.min(100,snake.variety));
+  var n=9, out="";
+  var amp = -(6 + mood*0.12);          /* -6 .. -18 */
+  var spd = (2.6 - mood*0.011).toFixed(2)+"s";
+  var spread = 6 + (vary/100)*34;      /* spalvų išsiskleidimas */
+  var sat = 30 + (mood*0.55) + (vary*0.15);
+  for(var i=0;i<n;i++){
+    var x=52+i*44, y=150;
+    var r=13+i*2.4;
+    var hue = vary<25 ? 282 : (185 + i*spread) % 360;
+    var col = "hsl("+hue+","+(vary<25?18:Math.min(95,sat))+"%,"+(vary<25?42:56)+"%)";
+    out += '<circle class="seg" style="--d:'+(i*0.09).toFixed(2)+'s" cx="'+x+'" cy="'+y+'" r="'+r.toFixed(1)+'" fill="'+col+'"/>';
+  }
+  var hx=52+8*44, hy=150;
+  var curve = (mood-50)/50*15;
+  var mouth = '<path d="M -16 10 Q 0 '+(10+curve).toFixed(1)+' 16 10" stroke="#10152e" stroke-width="4" fill="none" stroke-linecap="round"/>';
+  var eyeH = snake.sad? 4 : 9;
+  var headHue = vary<25 ? 282 : (185 + 8*spread)%360;
+  var headCol = "hsl("+headHue+","+(vary<25?18:Math.min(95,sat))+"%,"+(vary<25?46:62)+"%)";
+  var tongue = mood>55 ? '<path d="M0 22 L0 34 M0 34 L-7 42 M0 34 L7 42" stroke="#ff5b7a" stroke-width="4" fill="none" stroke-linecap="round"/>' : '';
+  var lid = snake.sad ? '<rect x="-24" y="-18" width="48" height="8" rx="4" fill="rgba(0,0,0,.35)"/>' : '';
+  var head =
+   '<g class="headg" style="--hd:.72s" transform="translate('+hx+','+hy+')">'+
+     '<circle cx="0" cy="0" r="34" fill="'+headCol+'"/>'+
+     '<ellipse cx="-13" cy="-8" rx="9" ry="'+eyeH+'" fill="#fff"/>'+
+     '<ellipse cx="13" cy="-8" rx="9" ry="'+eyeH+'" fill="#fff"/>'+
+     '<circle cx="-12" cy="-7" r="4.4" fill="#10152e"/><circle cx="14" cy="-7" r="4.4" fill="#10152e"/>'+
+     '<circle cx="-10.5" cy="-9" r="1.6" fill="#fff"/><circle cx="15.5" cy="-9" r="1.6" fill="#fff"/>'+
+     lid + mouth + tongue +
+   '</g>';
+  var sparks="";
+  if(mood>=75 && vary>=40){
+    var sp=[[100,60],[210,42],[330,70],[420,52]];
+    for(var s=0;s<sp.length;s++){
+      sparks+='<text class="sparkle" style="animation-delay:'+(s*0.3)+'s" x="'+sp[s][0]+'" y="'+sp[s][1]+'" font-size="26">✨</text>';
+    }
+  }
+  var loop = vary<25 ? '<text x="420" y="60" font-size="30" class="loopy" style="transform-origin:420px 52px">🔁</text>' : '';
+  var glow = vary<25 ? "none" : "drop-shadow(0 0 14px hsl("+((185+4*spread)%360)+",90%,60%))";
+  host.innerHTML =
+    '<svg viewBox="0 0 480 230" style="filter:'+glow+'">'+
+      '<g class="snakeBody" style="--amp:'+amp.toFixed(1)+'px;--spd:'+spd+'">'+out+head+'</g>'+
+      sparks+loop+
+    '</svg>';
+}
+
+/* ============ TURINYS ============ */
+var CARDS=[
+ {ico:"👋", txt:"\u201EGyvate, pasisveikink su Bugu.\u201C", good:true,
+  why:"Gyvatė mokosi būti DRAUGIŠKA."},
+ {ico:"🙈", txt:"\u201EGyvate, slėpkis nuo visų.\u201C", good:false,
+  why:"Toks pavyzdys moko BIJOTI draugų."},
+ {ico:"🧭", txt:"\u201EGyvate, padėk Lunai rasti kelią.\u201C", good:true,
+  why:"Gyvatė mokosi PADĖTI kitiems."},
+ {ico:"😜", txt:"\u201EGyvate, juokis iš Bliksono.\u201C", good:false,
+  why:"Iš draugų nesijuokiam. Tai moko pykčio."},
+ {ico:"🌈", txt:"\u201EGyvate, dalinkis spalvomis.\u201C", good:true,
+  why:"Gyvatė mokosi DALINTIS."},
+ {ico:"🕵️", txt:"\u201EGyvate, sakyk netiesą apie Neo.\u201C", good:false,
+  why:"Melas — blogas pavyzdys. Taip elgiasi DarkCode."}
+];
+
+var STEPS=["title","story1","story2","story3","howto","c0","c1","c2","c3","c4","c5","over","final"];
+var SCREEN={title:"sc-title",story1:"sc-story1",story2:"sc-story2",story3:"sc-story3",
+  howto:"sc-howto",over:"sc-over",final:"sc-final"};
+
+var MNOTES={
+ title:"Pasakyk: \u201EŠiandien mokysime dirbtinį intelektą — kaip šuniuką.\u201C Klausk: ar jūs mokot savo augintinį?",
+ story1:"Skaityk balsu. Maja — Leo ir Neo Žaibų draugė. Jos AInimalas — Spektrinė Gyvatė.",
+ story2:"Klausk klasės: \u201EKodėl gyvatė pasikeitė?\u201C Priimk visus spėjimus, nevertink.",
+ story3:"Pagrindinė mintis: DI mokosi iš PAVYZDŽIŲ. Blogi pavyzdžiai — blogas elgesys.",
+ howto:"Pasirink balsavimo būdą. Kamera — tik jei norit ir ji veikia. Be kameros viskas veikia lygiai taip pat.",
+ card:"Perskaityk kortelę balsu 2 kartus. Duok klasei 5 sekundes pagalvoti. Tada balsuojam KARTU.",
+ over:"Čia svarbiausia mintis: per daug VIENODŲ pavyzdžių — DI tampa siauras ir nuobodus. Reikia įvairovės.",
+ final:"Užbaik klausimu: \u201EKokį GERĄ pavyzdį tu rodai savo draugams?\u201C Kiekvienas pasako po vieną."
+};
+
+/* ============ BŪSENA ============ */
+var idx=0, pts=0, correctCount=0, answered=false, curCard=0;
+var $=function(id){return document.getElementById(id)};
+
+function buildDots(){
+  var d=$("dots"); d.innerHTML="";
+  for(var i=0;i<STEPS.length;i++){ var s=document.createElement("span"); s.className="dot"; d.appendChild(s); }
+}
+function paintDots(){
+  var ds=$("dots").children;
+  for(var i=0;i<ds.length;i++){
+    ds[i].className="dot"+(i<idx?" done":"")+(i===idx?" now":"");
+  }
+}
+function step(){ return STEPS[idx]; }
+
+function show(){
+  var st=step();
+  var isCard = st.charAt(0)==="c" && st.length===2;
+  var id = isCard ? "sc-card" : SCREEN[st];
+  var scs=document.querySelectorAll(".screen");
+  for(var i=0;i<scs.length;i++) scs[i].classList.remove("on");
+  var el=$(id); if(el) el.classList.add("on");
+
+  var trainPhase = isCard || st==="over" || st==="final";
+  document.body.setAttribute("data-phase", trainPhase?"train":"story");
+  $("camConfirm").classList.toggle("avail", isCard);
+
+  if(st==="howto") mountCam($("camHostBig"),"big");
+  else if(isCard) mountCam($("camHostSide"),"side");
+  else mountCam($("camStore"),"big");
+
+  if(isCard){ curCard=parseInt(st.substring(1),10); setupCard(); }
+  if(st==="over") setupOver();
+  if(st==="final") setupFinal();
+
+  $("mText").textContent = MNOTES[isCard?"card":st] || "";
+  paintDots();
+  $("pts").textContent = pts;
+}
+
+function go(n){
+  idx=Math.max(0,Math.min(STEPS.length-1,n));
+  show();
+}
+function next(){ if(idx<STEPS.length-1) go(idx+1); }
+function back(){ if(idx>0) go(idx-1); }
+
+function resetAll(){
+  idx=0; pts=0; correctCount=0; snake.mood=25; snake.skill=20; snake.variety=100; snake.sad=false;
+  var cs=document.querySelectorAll(".conf"); for(var i=0;i<cs.length;i++) cs[i].remove();
+  show();
+}
+
+/* ============ KORTELĖS LOGIKA ============ */
+function setMeters(){
+  $("mMood").style.width = Math.max(0,Math.min(100,snake.mood))+"%";
+  $("mSkill").style.width = Math.max(0,Math.min(100,snake.skill))+"%";
+}
+function setupCard(){
+  var c=CARDS[curCard];
+  answered=false;
+  $("rTag").textContent = "RAUNDAS "+(Math.floor(curCard/2)+1)+" · pavyzdys "+((curCard%2)+1)+"/2";
+  $("cIco").textContent=c.ico;
+  $("cTxt").textContent=c.txt;
+  $("vG").disabled=false; $("vB").disabled=false;
+  var fb=$("fb"); fb.className="fb"; $("fbBtn").style.display="none";
+  snake.sad = snake.mood < 35;
+  renderSnake($("snakeHost")); setMeters();
+}
+function vote(good){
+  if(answered) return;
+  var c=CARDS[curCard];
+  answered=true;
+  $("vG").disabled=true; $("vB").disabled=true;
+  var fb=$("fb");
+  if(good===c.good){
+    pts+=10; correctCount++;
+    snake.mood=Math.min(100,snake.mood+ (c.good?13:9));
+    snake.skill=Math.min(100,snake.skill+13);
+    fb.className="fb on ok";
+    $("fbT").textContent = c.good ? "✅ TAIP! Geras pavyzdys." : "✅ TAIP! Blogas pavyzdys.";
+    $("fbP").textContent = c.why + (c.good ? " Gyvatė šviesėja!" : " Šito NEMOKOM. Gyvatė lieka saugi.");
+    $("fbBtn").style.display="inline-block";
+    $("fbBtn").textContent="➡️ TOLIAU";
+    $("fbBtn").onclick=next;
+  } else {
+    snake.mood=Math.max(0,snake.mood-7);
+    fb.className="fb on no";
+    $("fbT").textContent = "🤔 Beveik! Teisingas atsakymas: " + (c.good?"GERAS 👍":"BLOGAS 👎");
+    $("fbP").textContent = c.why + " Klaida — tai mokymasis. Pataisom kartu!";
+    $("fbBtn").style.display="inline-block";
+    $("fbBtn").textContent="🔧 PATAISYTI IR MOKYTI TEISINGAI";
+    $("fbBtn").onclick=fixIt;
+  }
+  snake.sad = snake.mood < 35;
+  renderSnake($("snakeHost")); setMeters();
+  $("pts").textContent=pts;
+}
+function fixIt(){
+  pts+=5;
+  snake.mood=Math.min(100,snake.mood+11);
+  snake.skill=Math.min(100,snake.skill+11);
+  snake.sad = snake.mood < 35;
+  renderSnake($("snakeHost")); setMeters();
+  $("pts").textContent=pts;
+  $("fbT").textContent="👍 Pataisyta! Gyvatė išmoko teisingai.";
+  $("fbP").textContent="Taip ir tobulinamas DI: pastebim klaidą ir duodam GERĄ pavyzdį.";
+  $("fbBtn").textContent="➡️ TOLIAU";
+  $("fbBtn").onclick=next;
+  var st=document.querySelector("#sc-card .snakeStage");
+  st.classList.remove("shake"); void st.offsetWidth; st.classList.add("shake");
+}
+
+/* ============ PERTRENIRAVIMAS ============ */
+var overDone=false;
+function setupOver(){
+  overDone=false;
+  snake.variety=100; snake.sad=false; snake.mood=Math.max(snake.mood,60);
+  $("mVar").style.width="100%";
+  $("ovT").textContent="O JEI VISI PAVYZDŽIAI VIENODI?";
+  $("ovP").textContent="Duokim gyvatei 10 kartų TĄ PATĮ.";
+  $("ovBubble").style.display="none";
+  $("ovGo").style.display="inline-block";
+  $("ovFix").style.display="none";
+  $("ovFb").className="fb";
+  renderSnake($("snakeHost2"));
+}
+function overTrain(){
+  if(overDone) return;
+  overDone=true;
+  $("ovGo").style.display="none";
+  var v=100;
+  var t=setInterval(function(){
+    v-=10; if(v<10) v=10;
+    snake.variety=v;
+    $("mVar").style.width=v+"%";
+    renderSnake($("snakeHost2"));
+    if(v<=10){
+      clearInterval(t);
+      $("ovBubble").style.display="flex";
+      $("ovT").textContent="PERTRENIRAVIMAS!";
+      $("ovP").textContent="Gyvatė moka TIK vieną dalyką.";
+      var fb=$("ovFb"); fb.className="fb on no";
+      $("ovFbT").textContent="⚠️ Per daug vienodų pavyzdžių";
+      $("ovFbP").textContent="Spalvos dingo. Gyvatė kartoja tą patį. Ji nuobodi ir nieko naujo nesugalvoja. DI reikia ĮVAIRIŲ pavyzdžių!";
+      $("ovFix").style.display="inline-block";
+    }
+  },160);
+}
+function overFix(){
+  $("ovFix").style.display="none";
+  var v=10;
+  var t=setInterval(function(){
+    v+=10; if(v>100) v=100;
+    snake.variety=v;
+    $("mVar").style.width=v+"%";
+    renderSnake($("snakeHost2"));
+    if(v>=100){
+      clearInterval(t);
+      $("ovBubble").style.display="none";
+      $("ovT").textContent="ĮVAIROVĖ GRĮŽO! 🌈";
+      $("ovP").textContent="Skirtingi pavyzdžiai — protingas DI.";
+      var fb=$("ovFb"); fb.className="fb on ok";
+      $("ovFbT").textContent="✅ Taisyklė";
+      $("ovFbP").textContent="Geras DI mokosi iš DAUG SKIRTINGŲ gerų pavyzdžių.";
+      pts+=10; $("pts").textContent=pts;
+    }
+  },140);
+}
+
+/* ============ FINALAS ============ */
+function setupFinal(){
+  snake.mood=100; snake.skill=Math.max(snake.skill,80); snake.variety=100; snake.sad=false;
+  renderSnake($("snakeHost3"));
+  $("badgeHost").innerHTML=medal();
+  $("fCorrect").textContent=correctCount+"/6";
+  $("fPts").textContent=pts;
+  confetti();
+}
+function confetti(){
+  var cols=["#ffd23f","#2fdb7a","#2fe4ff","#ff4f6b","#b57bff","#ffffff"];
+  for(var i=0;i<70;i++){
+    (function(i){
+      setTimeout(function(){
+        var d=document.createElement("div");
+        d.className="conf";
+        d.style.left=(Math.random()*100)+"vw";
+        d.style.background=cols[i%cols.length];
+        d.style.animationDuration=(2.2+Math.random()*1.8)+"s";
+        document.body.appendChild(d);
+        setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); },4200);
+      }, i*35);
+    })(i);
+  }
+}
+
+/* ============ KAMERA ============ */
+var cam={on:false, stream:null, raf:0, last:0, g:0, r:0, gl:0, gr:0, rl:0, rr:0};
+var cnv=document.createElement("canvas"); cnv.width=160; cnv.height=120;
+var ctx=cnv.getContext("2d", {willReadFrequently:true});
+
+function mountCam(host, mode){
+  var p=$("camPanel");
+  if(!host) return;
+  p.className = (mode==="side"?"side":"big");
+  if(p.parentNode!==host){
+    host.appendChild(p);
+    if(cam.on){ var v=$("video"); if(v.paused){ v.play().catch(function(){}); } }
+  }
+}
+function camStart(){
+  if(cam.on) return;
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    $("camNote").textContent="Ši naršyklė kameros neleidžia. Balsuojam mygtukais — viskas gerai!";
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"user", width:{ideal:640}, height:{ideal:480}}, audio:false})
+  .then(function(s){
+    cam.stream=s; cam.on=true;
+    var v=$("video"); v.srcObject=s; v.play().catch(function(){});
+    $("camOff").style.display="none";
+    $("camNote").textContent="Kelkit korteles! Nieko neįrašom ir nesiunčiam.";
+    loop();
+  })
+  .catch(function(){
+    $("camNote").textContent="Kamera neveikia arba neleista. Balsuojam mygtukais — viskas gerai!";
+  });
+}
+function camStop(){
+  cam.on=false;
+  if(cam.raf) cancelAnimationFrame(cam.raf);
+  if(cam.stream){ var t=cam.stream.getTracks(); for(var i=0;i<t.length;i++) t[i].stop(); cam.stream=null; }
+  $("video").srcObject=null;
+  $("camOff").style.display="flex";
+  $("camNote").textContent="Kamera išjungta. Balsuojam mygtukais.";
+  cam.g=cam.r=0; paintBars();
+}
+function loop(ts){
+  if(!cam.on) return;
+  cam.raf=requestAnimationFrame(loop);
+  var now = ts || 0;
+  if(now-cam.last < 110) return;
+  cam.last=now;
+  var v=$("video");
+  if(!v.videoWidth) return;
+  try{ ctx.drawImage(v,0,0,cnv.width,cnv.height); }catch(e){ return; }
+  var d;
+  try{ d=ctx.getImageData(0,0,cnv.width,cnv.height).data; }catch(e){ return; }
+  var gL=0,gR=0,rL=0,rR=0;
+  var w=cnv.width, h=cnv.height, halfX=w/2;
+  for(var y=0;y<h;y+=2){
+    for(var x=0;x<w;x+=2){
+      var i=(y*w+x)*4;
+      var R=d[i], G=d[i+1], B=d[i+2];
+      var mx=Math.max(R,G,B), mn=Math.min(R,G,B);
+      if(mx-mn < 40 || mx < 55) continue;           /* per pilka / per tamsu */
+      if(G>R*1.22 && G>B*1.18){ if(x<halfX) gL++; else gR++; }
+      else if(R>G*1.45 && R>B*1.3){ if(x<halfX) rL++; else rR++; }
+    }
+  }
+  /* vaizdas veidrodinis: kairė ekrane = dešinė klasėje, todėl sukeičiam pusių etiketes */
+  cam.gl=gR; cam.gr=gL; cam.rl=rR; cam.rr=rL;
+  cam.g=gL+gR; cam.r=rL+rR;
+  paintBars();
+}
+function paintBars(){
+  var tot=cam.g+cam.r;
+  var pg = tot? Math.round(cam.g/tot*100):0;
+  var pr = tot? 100-pg : 0;
+  $("bg").style.width=pg+"%"; $("br").style.width=pr+"%";
+  $("pg").textContent=pg+"%"; $("pr").textContent=pr+"%";
+  $("halfInfo").textContent = "kairė pusė: 🟩"+(cam.gl)+" 🟥"+(cam.rl)+"  ·  dešinė pusė: 🟩"+(cam.gr)+" 🟥"+(cam.rr);
+}
+function camVote(){
+  if(!cam.on){ return; }
+  if(cam.g===0 && cam.r===0) return;
+  vote(cam.g>=cam.r);
+}
+
+/* ============ ĮVYKIAI ============ */
+$("goStart").onclick=next;
+$("bNext").onclick=next;
+$("bBack").onclick=back;
+$("bReset").onclick=resetAll;
+$("vG").onclick=function(){ vote(true) };
+$("vB").onclick=function(){ vote(false) };
+$("ovGo").onclick=overTrain;
+$("ovFix").onclick=overFix;
+$("camOn").onclick=camStart;
+$("camStopB").onclick=camStop;
+$("camConfirm").onclick=camVote;
+$("mBtn").onclick=function(){ $("mPanel").classList.toggle("on") };
+
+document.addEventListener("keydown", function(e){
+  var k=e.key;
+  var onBtn = e.target && e.target.tagName==="BUTTON";
+  if(onBtn && (k===" "||k==="Enter")) return;   /* mygtukas pats susitvarko */
+  if(k==="ArrowRight"||k===" "||k==="Enter"){ e.preventDefault(); next(); }
+  else if(k==="ArrowLeft"){ e.preventDefault(); back(); }
+  else if(k==="r"||k==="R"){ resetAll(); }
+  else if(k==="m"||k==="M"){ $("mPanel").classList.toggle("on"); }
+  else if(k==="g"||k==="G"||k==="1"){ if(step().charAt(0)==="c"&&step().length===2) vote(true); }
+  else if(k==="b"||k==="B"||k==="2"){ if(step().charAt(0)==="c"&&step().length===2) vote(false); }
+});
+
+/* komiksų piešiniai */
+$("a11").innerHTML = kid(MAJA);
+$("a12").innerHTML = '<div style="width:100%;height:100%" id="storySnake"></div>';
+$("a13").innerHTML = kid(MAJA) + bugas();
+$("a21").innerHTML = '<div style="width:100%;height:100%" id="storySnake2"></div>';
+$("a22").innerHTML = '<svg viewBox="0 0 160 140"><rect x="14" y="30" width="132" height="96" rx="12" fill="#101744" stroke="#3b49bd" stroke-width="5"/><path d="M30 118 q26-56 52-30 t48-8" stroke="#6a76d8" stroke-width="8" fill="none" stroke-linecap="round" opacity=".6"/><text x="80" y="86" font-size="44" text-anchor="middle">🫣</text></svg>';
+$("a23").innerHTML = bugas() + bliksonas();
+$("a31").innerHTML = cogni();
+$("a32").innerHTML = '<svg viewBox="0 0 170 140"><rect x="10" y="24" width="70" height="46" rx="10" fill="#e02745"/><text x="45" y="56" font-size="26" text-anchor="middle">👎</text><rect x="90" y="24" width="70" height="46" rx="10" fill="#e02745"/><text x="125" y="56" font-size="26" text-anchor="middle">👎</text><rect x="10" y="80" width="70" height="46" rx="10" fill="#e02745"/><text x="45" y="112" font-size="26" text-anchor="middle">👎</text><rect x="90" y="80" width="70" height="46" rx="10" fill="#e02745"/><text x="125" y="112" font-size="26" text-anchor="middle">👎</text></svg>';
+$("a33").innerHTML = kid(LUNA) + kid(LEO);
+
+(function(){
+  var tmp={mood:snake.mood,skill:snake.skill,variety:snake.variety,sad:snake.sad};
+  snake.mood=95; snake.variety=100; snake.sad=false;
+  renderSnake(document.getElementById("storySnake"));
+  snake.mood=8; snake.variety=18; snake.sad=true;
+  renderSnake(document.getElementById("storySnake2"));
+  snake.mood=tmp.mood; snake.skill=tmp.skill; snake.variety=tmp.variety; snake.sad=tmp.sad;
+})();
+
+buildDots();
+show();
+renderSnake($("snakeHost"));
+setMeters();
+</script>
+<!-- PA1-E08 v1 · Neuron 2026-08-14 -->

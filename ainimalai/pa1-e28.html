@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PA1-E28 · Ritmo mašina</title>
+<style>
+  :root{
+    --bg1:#0b0d2b; --bg2:#1a1050; --panel:#14163a; --panel2:#1e2150;
+    --white:#fbfbff; --dim:#a9acd8;
+    --t1:#c86bff; --t1b:#ff7ce8;
+    --t2:#3ec6ff; --t2b:#7de8ff;
+    --t3:#4ade80; --t3b:#a8ff9e;
+    --t4:#ffcc33; --t4b:#ff9933;
+    --gold:#ffd23f; --danger:#ff5566;
+    --radius:22px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--bg1);}
+  body{
+    font-family:Verdana,Tahoma,'Segoe UI',Geneva,sans-serif;
+    color:var(--white);
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255,255,255,.12) 0, transparent 2px) 0 0/60px 60px,
+      radial-gradient(circle at 60% 70%, rgba(255,255,255,.10) 0, transparent 2px) 0 0/90px 90px,
+      radial-gradient(circle at 40% 40%, rgba(255,255,255,.08) 0, transparent 1.5px) 0 0/40px 40px,
+      linear-gradient(160deg, var(--bg1), var(--bg2) 60%, #240b3c);
+    width:100vw; height:100vh; position:relative; user-select:none;
+  }
+  .hidden{display:none !important;}
+  svg{display:block;}
+  button{font-family:inherit; cursor:pointer; border:none;}
+
+  /* ---------- TOP BAR ---------- */
+  #topbar{
+    position:fixed; top:0; left:0; right:0; height:64px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 22px; z-index:50;
+    background:linear-gradient(180deg, rgba(8,9,30,.92), rgba(8,9,30,.55));
+    border-bottom:2px solid rgba(255,255,255,.08);
+  }
+  #code{font-weight:800; letter-spacing:1px; font-size:18px; color:var(--gold); text-shadow:0 0 10px rgba(255,210,63,.6);}
+  #progress{display:flex; gap:6px; align-items:center;}
+  .seg{width:34px; height:10px; border-radius:6px; background:rgba(255,255,255,.15); transition:background .3s, transform .3s;}
+  .seg.done{background:var(--t3); box-shadow:0 0 8px rgba(74,222,128,.7);}
+  .seg.now{background:var(--gold); box-shadow:0 0 10px rgba(255,210,63,.9); transform:scaleY(1.4);}
+  #stars{font-weight:800; font-size:18px; color:var(--white); display:flex; align-items:center; gap:6px;}
+  #stars span{color:var(--gold); text-shadow:0 0 8px rgba(255,210,63,.7);}
+
+  /* ---------- SCREENS ---------- */
+  .screen{
+    position:absolute; top:64px; left:0; right:0; bottom:80px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:16px 4vw; text-align:center;
+  }
+  h1.title{font-size:44px; margin:0 0 6px; text-shadow:0 0 18px rgba(200,107,255,.8); letter-spacing:1px;}
+  h2.sub{font-size:22px; margin:0 0 18px; color:var(--dim); font-weight:600;}
+  .bigbtn{
+    background:linear-gradient(135deg,var(--t1),var(--t1b));
+    color:#1a0530; font-weight:900; font-size:26px; padding:18px 46px; border-radius:40px;
+    box-shadow:0 8px 0 #7a2fb0, 0 12px 24px rgba(0,0,0,.4);
+    transition:transform .12s;
+  }
+  .bigbtn:active{transform:translateY(6px); box-shadow:0 2px 0 #7a2fb0;}
+
+  /* ---------- TITLE SCREEN ---------- */
+  #screen-title .logoRow{display:flex; gap:18px; margin-bottom:22px;}
+  .logoIcon{width:64px; height:64px; filter:drop-shadow(0 0 10px rgba(255,255,255,.4));}
+
+  /* ---------- STORY SCREEN ---------- */
+  .storyCard{
+    background:var(--panel); border-radius:28px; padding:26px 30px; max-width:820px; width:92%;
+    border:3px solid rgba(255,255,255,.08); box-shadow:0 14px 0 rgba(0,0,0,.35);
+    position:relative;
+  }
+  .storyScene{width:100%; max-width:520px; margin:0 auto 10px;}
+  .storyText{font-size:30px; font-weight:800; line-height:1.25; margin:8px 0 4px;}
+  .bubble{
+    background:var(--white); color:#1a0530; border-radius:18px; padding:10px 16px; font-weight:700;
+    font-size:19px; display:inline-block; position:relative; margin-top:6px;
+  }
+  .dots{display:flex; gap:8px; justify-content:center; margin-top:16px;}
+  .dot{width:12px; height:12px; border-radius:50%; background:rgba(255,255,255,.25);}
+  .dot.on{background:var(--gold); box-shadow:0 0 8px rgba(255,210,63,.8);}
+
+  /* ---------- RULES SCREEN ---------- */
+  .rulesGrid{display:flex; gap:16px; flex-wrap:wrap; justify-content:center; max-width:1000px;}
+  .teamCard{
+    width:190px; border-radius:20px; padding:14px 10px; background:var(--panel);
+    border:3px solid var(--c); box-shadow:0 0 18px var(--cglow);
+  }
+  .teamCard .key{
+    width:44px; height:44px; border-radius:12px; background:var(--c); color:#111; font-weight:900; font-size:22px;
+    display:flex; align-items:center; justify-content:center; margin:8px auto 4px;
+  }
+  .teamCard .tname{font-weight:800; font-size:16px; margin-top:4px;}
+  .rulesNote{max-width:760px; font-size:19px; font-weight:700; color:var(--dim); margin-top:16px; line-height:1.4;}
+
+  /* ---------- GAME SCREEN ---------- */
+  #screen-game{justify-content:center;}
+  .arenaRow{display:flex; flex-direction:row; align-items:stretch; justify-content:center; gap:18px; width:100%;}
+  .gameLeft{display:flex; flex-direction:column; align-items:center; justify-content:flex-start; flex:0 0 340px; padding-top:6px;}
+  .gameRight{display:flex; flex-direction:column; align-items:center; justify-content:flex-start; flex:0 0 300px; padding-top:6px;}
+
+  #roundLabel{font-size:20px; font-weight:800; color:var(--gold); margin-bottom:6px;}
+  #stepDots{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; max-width:320px; margin-bottom:10px;}
+  .stepDot{width:20px; height:20px; border-radius:6px; background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.2);}
+  .stepDot.done{background:var(--t3); border-color:var(--t3);}
+  .stepDot.active{background:var(--gold); border-color:var(--gold); box-shadow:0 0 10px var(--gold);}
+
+  .metroWrap{position:relative; width:160px; height:160px; margin:4px auto 10px;}
+  #metroRing{width:160px; height:160px;}
+  #metroCore{
+    position:absolute; top:50%; left:50%; width:96px; height:96px; border-radius:50%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 35% 30%, #fff8, transparent 60%), linear-gradient(135deg,var(--t1),var(--t2));
+    box-shadow:0 0 40px rgba(200,107,255,.7);
+    animation:beatPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes beatPulse{0%{transform:translate(-50%,-50%) scale(.92);} 45%{transform:translate(-50%,-50%) scale(1.08);} 100%{transform:translate(-50%,-50%) scale(.92);}}
+  #metroCore.paused{animation-play-state:paused;}
+
+  #promptBox{min-height:50px; font-size:20px; font-weight:800; margin-bottom:6px;}
+  #promptBox .who{padding:5px 12px; border-radius:14px; display:inline-block;}
+
+  .teamsRow{display:flex; gap:14px; margin:16px auto 0; flex-wrap:wrap; justify-content:center; width:100%; max-width:900px;}
+  .teamBtn{
+    width:110px; height:120px; border-radius:18px; background:var(--panel2);
+    border:4px solid var(--c); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:5px; transition:transform .15s, box-shadow .15s; position:relative;
+  }
+  .teamBtn .ic{width:44px; height:44px;}
+  .teamBtn .kbadge{
+    position:absolute; top:6px; left:6px; width:26px; height:26px; border-radius:8px; background:var(--c);
+    color:#111; font-weight:900; font-size:15px; display:flex; align-items:center; justify-content:center;
+  }
+  .teamBtn .nm{font-weight:800; font-size:14px;}
+  .teamBtn.waiting{box-shadow:0 0 0 rgba(0,0,0,0);}
+  .teamBtn.glow{transform:scale(1.08); box-shadow:0 0 30px var(--c), 0 0 60px var(--c);}
+  .teamBtn.ok{animation:okPop .5s ease;}
+  .teamBtn.bad{animation:shake .35s ease;}
+  @keyframes okPop{0%{transform:scale(1.08);} 40%{transform:scale(1.22);} 100%{transform:scale(1);}}
+  @keyframes shake{0%,100%{transform:translateX(0);} 25%{transform:translateX(-8px);} 75%{transform:translateX(8px);}}
+
+  .t1{--c:var(--t1); --cglow:rgba(200,107,255,.5);}
+  .t2{--c:var(--t2); --cglow:rgba(62,198,255,.5);}
+  .t3{--c:var(--t3); --cglow:rgba(74,222,128,.5);}
+  .t4{--c:var(--t4); --cglow:rgba(255,204,51,.5);}
+
+  #retryCue{font-size:20px; font-weight:800; color:var(--t4b); min-height:28px; margin-top:6px;}
+
+  /* house */
+  #houseWrap{background:var(--panel); border-radius:22px; padding:12px; border:3px solid rgba(255,255,255,.08);}
+  #houseSvg{width:280px; height:210px;}
+  .stagegroup{opacity:0; transform:translateY(10px); transition:opacity .6s ease, transform .6s ease;}
+  .stagegroup.show{opacity:1; transform:translateY(0);}
+  #houseLabel{font-size:15px; font-weight:700; color:var(--dim); margin-top:6px;}
+
+  /* round complete overlay */
+  #roundDone{
+    position:absolute; inset:0; background:rgba(8,9,30,.9); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; border-radius:20px; z-index:30;
+  }
+  #roundDone h3{font-size:34px; margin:0; text-shadow:0 0 16px rgba(255,210,63,.8);}
+
+  /* ---------- FINALE ---------- */
+  #screen-finale .finaleWrap{display:flex; gap:26px; align-items:center;}
+  #finaleLights{display:flex; gap:14px;}
+  .flIcon{width:70px; height:70px; opacity:.35; transition:opacity .2s, transform .2s;}
+  .flIcon.on{opacity:1; transform:scale(1.15); filter:drop-shadow(0 0 16px currentColor);}
+  #cogniMsg{font-size:26px; font-weight:800; max-width:480px; margin-top:10px;}
+  #badge{margin-top:10px;}
+  .bridge{margin-top:14px; font-size:17px; color:var(--dim); font-weight:700;}
+
+  /* ---------- M NOTE ---------- */
+  #mnote{
+    position:fixed; left:16px; bottom:88px; max-width:340px; background:#fff9e6; color:#3a2a00;
+    border-radius:16px; padding:10px 14px; font-size:14px; font-weight:700; line-height:1.35;
+    box-shadow:0 8px 20px rgba(0,0,0,.4); border:2px dashed #c9a227; z-index:60;
+  }
+  #mnote b{background:#c9a227; color:#fff; border-radius:6px; padding:1px 7px; margin-right:6px;}
+
+  /* ---------- BOTTOM NAV ---------- */
+  #navbar{
+    position:fixed; left:0; right:0; bottom:0; height:80px; display:flex; align-items:center; justify-content:center; gap:16px;
+    background:linear-gradient(0deg, rgba(8,9,30,.95), rgba(8,9,30,.5)); z-index:55;
+  }
+  .navbtn{
+    background:var(--panel2); color:var(--white); font-weight:800; font-size:17px; padding:12px 22px; border-radius:16px;
+    border:2px solid rgba(255,255,255,.15);
+  }
+  .navbtn.primary{background:linear-gradient(135deg,var(--t3),#22c55e); color:#052e12;}
+  .navbtn:active{transform:translateY(3px);}
+
+  .camnote{font-size:13px;color:var(--dim);}
+</style>
+</head>
+<body>
+
+<!-- ================= ICON SPRITE ================= -->
+<svg width="0" height="0" style="position:absolute">
+<defs>
+  <symbol id="ic-snake" viewBox="0 0 100 100">
+    <path d="M20 80 C10 70 10 55 25 50 C40 45 30 30 45 25 C60 20 60 35 70 30 C82 24 88 34 80 42" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round"/>
+    <circle cx="80" cy="42" r="9" fill="currentColor"/>
+    <circle cx="83" cy="39" r="2" fill="#1a0530"/>
+    <path d="M20 80 q-6 4 -10 2" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-bird" viewBox="0 0 100 100">
+    <ellipse cx="46" cy="55" rx="28" ry="24" fill="currentColor"/>
+    <path d="M74 50 L94 44 L78 60 Z" fill="currentColor"/>
+    <circle cx="60" cy="45" r="3" fill="#1a0530"/>
+    <path d="M30 40 Q46 18 62 34 Q50 30 40 40Z" fill="currentColor" opacity=".8"/>
+    <path d="M18 55 q-8 -2 -12 -10 M22 62 q-9 1 -14 -5 M20 70 q-8 4 -14 1" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" opacity=".6"/>
+  </symbol>
+  <symbol id="ic-bug" viewBox="0 0 100 100">
+    <ellipse cx="50" cy="58" rx="26" ry="30" fill="currentColor"/>
+    <circle cx="50" cy="30" r="14" fill="currentColor"/>
+    <path d="M42 18 L34 6 M58 18 L66 6" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="44" cy="26" r="2.5" fill="#1a0530"/>
+    <circle cx="56" cy="26" r="2.5" fill="#1a0530"/>
+    <circle cx="50" cy="50" r="5" fill="#1a0530" opacity=".35"/>
+    <circle cx="50" cy="68" r="5" fill="#1a0530" opacity=".35"/>
+    <path d="M26 50 L10 42 M26 62 L8 62 M26 74 L10 82 M74 50 L90 42 M74 62 L92 62 M74 74 L90 82" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-dog" viewBox="0 0 100 100">
+    <ellipse cx="50" cy="62" rx="30" ry="22" fill="currentColor"/>
+    <circle cx="34" cy="38" r="20" fill="currentColor"/>
+    <path d="M20 24 L8 6 L26 20Z" fill="currentColor"/>
+    <path d="M48 24 L60 4 L52 24Z" fill="currentColor"/>
+    <circle cx="27" cy="36" r="3" fill="#1a0530"/>
+    <circle cx="41" cy="36" r="3" fill="#1a0530"/>
+    <ellipse cx="34" cy="46" rx="4" ry="3" fill="#1a0530"/>
+    <path d="M70 55 L84 40 L88 50 L76 60Z" fill="#fff" opacity=".85"/>
+  </symbol>
+  <symbol id="ic-star" viewBox="0 0 100 100">
+    <path d="M50 6 L61 38 L96 38 L67 58 L78 92 L50 71 L22 92 L33 58 L4 38 L39 38Z" fill="currentColor"/>
+  </symbol>
+  <symbol id="ic-cogni" viewBox="0 0 100 100">
+    <ellipse cx="50" cy="90" rx="34" ry="6" fill="#7de8ff" opacity=".3"/>
+    <path d="M50 20 L82 38 V70 L50 88 L18 70 V38Z" fill="none" stroke="currentColor" stroke-width="4"/>
+    <circle cx="50" cy="54" r="16" fill="currentColor" opacity=".85"/>
+    <circle cx="44" cy="50" r="3" fill="#04121c"/>
+    <circle cx="56" cy="50" r="3" fill="#04121c"/>
+    <path d="M42 60 Q50 66 58 60" stroke="#04121c" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-house" viewBox="0 0 100 100">
+    <rect x="16" y="46" width="68" height="40" fill="currentColor"/>
+    <path d="M10 50 L50 16 L90 50Z" fill="currentColor"/>
+  </symbol>
+</defs>
+</svg>
+
+<div id="topbar">
+  <div id="code">PA1-E28 · Ritmo mašina</div>
+  <div id="progress">
+    <div class="seg" data-seg="0"></div>
+    <div class="seg" data-seg="1"></div>
+    <div class="seg" data-seg="2"></div>
+    <div class="seg" data-seg="3"></div>
+    <div class="seg" data-seg="4"></div>
+    <div class="seg" data-seg="5"></div>
+  </div>
+  <div id="stars"><span>⭐</span><span id="starCount">0</span></div>
+</div>
+
+<!-- ============ TITLE ============ -->
+<section class="screen" id="screen-title">
+  <div class="logoRow">
+    <svg class="logoIcon" viewBox="0 0 100 100" style="color:var(--t1)"><use href="#ic-snake"/></svg>
+    <svg class="logoIcon" viewBox="0 0 100 100" style="color:var(--t2)"><use href="#ic-bird"/></svg>
+    <svg class="logoIcon" viewBox="0 0 100 100" style="color:var(--t3)"><use href="#ic-bug"/></svg>
+    <svg class="logoIcon" viewBox="0 0 100 100" style="color:var(--t4)"><use href="#ic-dog"/></svg>
+  </div>
+  <h1 class="title">🎵 RITMO MAŠINA</h1>
+  <h2 class="sub">Be garso — tik ŠVIESA ir TAKTAS!</h2>
+  <button class="bigbtn" id="btnStart">▶ PRADĖTI</button>
+</section>
+
+<!-- ============ STORY ============ -->
+<section class="screen hidden" id="screen-story">
+  <div class="storyCard">
+    <div class="storyScene" id="storyScene"></div>
+    <div class="storyText" id="storyText"></div>
+    <div class="bubble" id="storyBubble"></div>
+    <div class="dots" id="storyDots"></div>
+  </div>
+</section>
+
+<!-- ============ RULES ============ -->
+<section class="screen hidden" id="screen-rules">
+  <h1 class="title" style="font-size:34px;">4 KOMANDOS · 1 TAKTAS</h1>
+  <div class="rulesGrid">
+    <div class="teamCard t1"><svg class="ic" viewBox="0 0 100 100" width="50" height="50" style="color:var(--t1)"><use href="#ic-snake"/></svg><div class="key">1</div><div class="tname">Spektrinė Gyvatė</div></div>
+    <div class="teamCard t2"><svg class="ic" viewBox="0 0 100 100" width="50" height="50" style="color:var(--t2)"><use href="#ic-bird"/></svg><div class="key">2</div><div class="tname">Garsinis Paukštis</div></div>
+    <div class="teamCard t3"><svg class="ic" viewBox="0 0 100 100" width="50" height="50" style="color:var(--t3)"><use href="#ic-bug"/></svg><div class="key">3</div><div class="tname">Bugas</div></div>
+    <div class="teamCard t4"><svg class="ic" viewBox="0 0 100 100" width="50" height="50" style="color:var(--t4)"><use href="#ic-dog"/></svg><div class="key">4</div><div class="tname">Bliksonas</div></div>
+  </div>
+  <div class="rulesNote">
+    Maja, Luna, Neo ir Leo AInimalai nori šokti kartu. Ekrane pulsuoja ŠVIESA — tai taktas. 🟣 Kai šviečia TAVO AInimalas — spausk savo mygtuką (1-4) arba lieski savo zoną ekrane. Klaidos nebaidome — bandom dar kartą!
+  </div>
+  <button class="bigbtn" id="btnToGame" style="margin-top:20px;">▶ PIRMYN</button>
+</section>
+
+<!-- ============ GAME ============ -->
+<section class="screen hidden" id="screen-game">
+ <div class="arenaRow">
+  <div class="gameLeft">
+    <div id="roundLabel">Raundas 1</div>
+    <div id="stepDots"></div>
+    <div class="metroWrap">
+      <svg id="metroRing" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="10"/>
+        <circle id="ringProgress" cx="100" cy="100" r="92" fill="none" stroke="#ffd23f" stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="578" stroke-dashoffset="578" transform="rotate(-90 100 100)"/>
+      </svg>
+      <div id="metroCore"></div>
+    </div>
+    <div id="promptBox"></div>
+    <div id="retryCue"></div>
+  </div>
+  <div class="gameRight">
+    <div id="houseWrap">
+      <svg id="houseSvg" viewBox="0 0 300 220">
+        <rect x="0" y="0" width="300" height="220" fill="#140a30"/>
+        <rect x="0" y="176" width="300" height="44" fill="#2a6b2f"/>
+        <g class="stagegroup" id="hs1">
+          <rect x="60" y="160" width="180" height="18" fill="#7d7d86"/>
+          <rect x="60" y="160" width="18" height="18" fill="#5c5c66"/>
+          <rect x="222" y="160" width="18" height="18" fill="#5c5c66"/>
+        </g>
+        <g class="stagegroup" id="hs2">
+          <rect x="70" y="96" width="160" height="64" fill="#a9713b"/>
+          <rect x="70" y="96" width="16" height="64" fill="#8a5a2c"/>
+          <rect x="214" y="96" width="16" height="64" fill="#8a5a2c"/>
+          <rect x="100" y="112" width="26" height="26" fill="#ffe38a"/>
+          <rect x="174" y="112" width="26" height="26" fill="#ffe38a"/>
+          <rect x="136" y="120" width="28" height="40" fill="#5c3a1a"/>
+        </g>
+        <g class="stagegroup" id="hs3">
+          <rect x="118" y="76" width="64" height="16" fill="#c94b3f"/>
+          <rect x="102" y="60" width="96" height="16" fill="#c94b3f"/>
+          <rect x="86" y="44" width="128" height="16" fill="#c94b3f"/>
+          <rect x="70" y="96" width="160" height="8" fill="#8a3529"/>
+        </g>
+        <g class="stagegroup" id="hsF">
+          <rect x="145" y="20" width="6" height="24" fill="#8a5a2c"/>
+          <path d="M151 20 L178 27 L151 34Z" fill="#ffd23f"/>
+          <circle cx="86" cy="188" r="6" style="fill:var(--t1)"/>
+          <circle cx="214" cy="188" r="6" style="fill:var(--t2)"/>
+          <circle cx="70" cy="176" r="5" style="fill:var(--t3)"/>
+          <circle cx="230" cy="176" r="5" style="fill:var(--t4)"/>
+        </g>
+      </svg>
+      <div id="houseLabel">Bendruomenės namas</div>
+    </div>
+  </div>
+ </div>
+ <div class="teamsRow" id="teamsRow"></div>
+  <div id="roundDone" class="hidden">
+    <svg width="70" height="70" viewBox="0 0 100 100" style="color:var(--gold)"><use href="#ic-star"/></svg>
+    <h3 id="roundDoneTitle">Raundas baigtas!</h3>
+    <button class="bigbtn" id="btnNextRound">▶ Kitas raundas</button>
+  </div>
+</section>
+
+<!-- ============ FINALE ============ -->
+<section class="screen hidden" id="screen-finale">
+  <h1 class="title" style="font-size:38px;">🎆 SINCHRONINIS ŠVIESŲ ŠOU!</h1>
+  <div class="finaleWrap">
+    <svg width="150" height="120" viewBox="0 0 300 220" id="houseFinalSvg">
+      <rect x="0" y="0" width="300" height="220" fill="#140a30"/>
+      <rect x="0" y="176" width="300" height="44" fill="#2a6b2f"/>
+      <rect x="60" y="160" width="180" height="18" fill="#7d7d86"/>
+      <rect x="60" y="160" width="18" height="18" fill="#5c5c66"/>
+      <rect x="222" y="160" width="18" height="18" fill="#5c5c66"/>
+      <rect x="70" y="96" width="160" height="64" fill="#a9713b"/>
+      <rect x="70" y="96" width="16" height="64" fill="#8a5a2c"/>
+      <rect x="214" y="96" width="16" height="64" fill="#8a5a2c"/>
+      <rect x="100" y="112" width="26" height="26" fill="#ffe38a"/>
+      <rect x="174" y="112" width="26" height="26" fill="#ffe38a"/>
+      <rect x="136" y="120" width="28" height="40" fill="#5c3a1a"/>
+      <rect x="118" y="76" width="64" height="16" fill="#c94b3f"/>
+      <rect x="102" y="60" width="96" height="16" fill="#c94b3f"/>
+      <rect x="86" y="44" width="128" height="16" fill="#c94b3f"/>
+      <rect x="70" y="96" width="160" height="8" fill="#8a3529"/>
+      <rect x="145" y="20" width="6" height="24" fill="#8a5a2c"/>
+      <path d="M151 20 L178 27 L151 34Z" fill="#ffd23f"/>
+      <circle cx="86" cy="188" r="6" style="fill:var(--t1)"/>
+      <circle cx="214" cy="188" r="6" style="fill:var(--t2)"/>
+      <circle cx="70" cy="176" r="5" style="fill:var(--t3)"/>
+      <circle cx="230" cy="176" r="5" style="fill:var(--t4)"/>
+    </svg>
+    <div id="finaleLights">
+      <svg class="flIcon" viewBox="0 0 100 100" style="color:var(--t1)" data-t="1"><use href="#ic-snake"/></svg>
+      <svg class="flIcon" viewBox="0 0 100 100" style="color:var(--t2)" data-t="2"><use href="#ic-bird"/></svg>
+      <svg class="flIcon" viewBox="0 0 100 100" style="color:var(--t3)" data-t="3"><use href="#ic-bug"/></svg>
+      <svg class="flIcon" viewBox="0 0 100 100" style="color:var(--t4)" data-t="4"><use href="#ic-dog"/></svg>
+    </div>
+  </div>
+  <svg width="90" height="90" viewBox="0 0 100 100" style="color:#7de8ff; margin-top:10px;"><use href="#ic-cogni"/></svg>
+  <div id="cogniMsg">„Jūs — tikra komanda."</div>
+  <div id="badge">🏅 <b>Ritmo meistrai</b></div>
+  <div class="bridge">Kitas nuotykis: <b>PA1-E32 — Kova su DarkCode!</b></div>
+  <button class="bigbtn" id="btnRestart" style="margin-top:16px;">⟲ Žaisti iš naujo</button>
+</section>
+
+<div id="mnote"><b>M</b><span id="mnoteText">Sveiki! Šiandien žaisime be garso — tik akimis ir mygtukais.</span></div>
+
+<div id="navbar">
+  <button class="navbtn" id="btnBack">◀ Atgal</button>
+  <button class="navbtn primary" id="btnNext">Kitas ▶</button>
+  <button class="navbtn" id="btnRestart2">⟲ Iš naujo (R)</button>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- DATA ---------------- */
+var TEAMS = [
+  {id:1, key:"1", name:"Gyvatė", icon:"#ic-snake", cls:"t1", color:"var(--t1)"},
+  {id:2, key:"2", name:"Paukštis", icon:"#ic-bird", cls:"t2", color:"var(--t2)"},
+  {id:3, key:"3", name:"Bugas", icon:"#ic-bug", cls:"t3", color:"var(--t3)"},
+  {id:4, key:"4", name:"Bliksonas", icon:"#ic-dog", cls:"t4", color:"var(--t4)"}
+];
+
+var ROUNDS = [
+  {seq:[1,2]},
+  {seq:[1,2,3,4]},
+  {seq:[1,3,2,4,3,1,4,2]}
+];
+
+var STORY = [
+  {
+    text:"Leo, Neo, Maja, Luna nori šokti.",
+    bubble:"Bet AInimalai šoka savaip...",
+    mnote:"Perskaitykite garsiai: Leo, Neo, Maja ir Luna AInimalai nori sušokti kartu, bet dar nesutaria.",
+    scene:"confused"
+  },
+  {
+    text:"Daina tampa ŠVIESŲ ŠOU!",
+    bubble:"CogniTronas: „Be garso — tik šviesa!“",
+    mnote:"Paaiškinkite: mūsų 'daina' bus šviesų šou — jokio garso, tik akys.",
+    scene:"cogni"
+  },
+  {
+    text:"Padėkime jiems susikoordinuoti!",
+    bubble:"Spauskite savo mygtuką TIKSLIAI!",
+    mnote:"Paskirstykite klasę į 4 komandas — kiekviena gauna savo mygtuką (1–4) arba savo zoną ekrane.",
+    scene:"keys"
+  }
+];
+
+var MNOTES = {
+  title:"Sveiki! Šiandien žaisime be garso — tik akimis ir mygtukais.",
+  rules:"Padalinkite klasę į 4 komandas. Kiekviena stebi savo AInimalą ir savo mygtuką.",
+  game_demo:"Žiūrėkite kartu — CogniTronas rodo taktą. Tada bandysime patys.",
+  game_play:"Kai šviečia jūsų AInimalas — spauskite savo mygtuką! Klaidos nebaisios.",
+  roundDone:"Puiku! Namas auga. Einam į kitą raundą.",
+  finale:"Visos keturios komandos susikoordinavo — tai tikras komandinis darbas!"
+};
+
+/* ---------------- STATE ---------------- */
+var screens = ["title","story","rules","game","finale"];
+var curScreen = "title";
+var storyIdx = 0;
+var roundIdx = 0;
+var stepIdx = 0;
+var phase = "idle"; // demo | play
+var stars = 0;
+var beatTimer = null;
+var demoTimer = null;
+var BEAT_MS = 1400;
+
+var $ = function(id){ return document.getElementById(id); };
+
+/* ---------------- TOP PROGRESS ---------------- */
+// segments: 0 intro,1 rules,2 r1,3 r2,4 r3,5 finale
+function segIndexFor(){
+  if(curScreen==="title" || curScreen==="story") return 0;
+  if(curScreen==="rules") return 1;
+  if(curScreen==="game") return 2+roundIdx;
+  if(curScreen==="finale") return 5;
+  return 0;
+}
+function updateProgress(){
+  var idx = segIndexFor();
+  var segs = document.querySelectorAll(".seg");
+  segs.forEach(function(s,i){
+    s.classList.toggle("done", i<idx);
+    s.classList.toggle("now", i===idx);
+  });
+}
+function updateStars(){ $("starCount").textContent = stars; }
+
+/* ---------------- SCREEN SWITCH ---------------- */
+function showScreen(name){
+  screens.forEach(function(s){ $("screen-"+s).classList.toggle("hidden", s!==name); });
+  curScreen = name;
+  updateProgress();
+  if(name==="story") renderStory();
+  if(name==="rules") setMNote(MNOTES.rules);
+  if(name==="title") setMNote(MNOTES.title);
+  if(name==="game") { setupRound(roundIdx); }
+  if(name==="finale") runFinale();
+}
+function setMNote(t){ $("mnoteText").textContent = t; }
+
+/* ---------------- STORY ---------------- */
+function sceneSVG(kind){
+  if(kind==="confused"){
+    return '<svg viewBox="0 0 300 140" width="100%" height="140">' +
+      '<use href="#ic-snake" x="10" y="20" width="60" height="60" style="color:var(--t1)"/>' +
+      '<use href="#ic-bird" x="80" y="10" width="60" height="60" style="color:var(--t2)"/>' +
+      '<use href="#ic-bug" x="150" y="30" width="60" height="60" style="color:var(--t3)"/>' +
+      '<use href="#ic-dog" x="225" y="15" width="60" height="60" style="color:var(--t4)"/>' +
+      '<text x="150" y="130" text-anchor="middle" font-size="26">❓❓❓</text></svg>';
+  }
+  if(kind==="cogni"){
+    return '<svg viewBox="0 0 300 140" width="100%" height="140">' +
+      '<use href="#ic-cogni" x="105" y="0" width="90" height="90" style="color:#7de8ff"/>' +
+      '<text x="150" y="128" text-anchor="middle" font-size="30">💡🎆</text></svg>';
+  }
+  return '<svg viewBox="0 0 300 140" width="100%" height="140">' +
+    '<use href="#ic-snake" x="4" y="40" width="54" height="54" style="color:var(--t1)"/>' +
+    '<use href="#ic-bird" x="86" y="40" width="54" height="54" style="color:var(--t2)"/>' +
+    '<use href="#ic-bug" x="168" y="40" width="54" height="54" style="color:var(--t3)"/>' +
+    '<use href="#ic-dog" x="242" y="40" width="54" height="54" style="color:var(--t4)"/>' +
+    '<text x="150" y="30" text-anchor="middle" font-size="24">1️⃣2️⃣3️⃣4️⃣</text></svg>';
+}
+function renderStory(){
+  var s = STORY[storyIdx];
+  $("storyScene").innerHTML = sceneSVG(s.scene);
+  $("storyText").textContent = s.text;
+  $("storyBubble").textContent = s.bubble;
+  setMNote(s.mnote);
+  var dotsHtml = "";
+  STORY.forEach(function(_,i){ dotsHtml += '<div class="dot ' + (i===storyIdx?"on":"") + '"></div>'; });
+  $("storyDots").innerHTML = dotsHtml;
+}
+
+/* ---------------- NAVIGATION (global next/back) ---------------- */
+function goNext(){
+  if(curScreen==="title"){ showScreen("story"); return; }
+  if(curScreen==="story"){
+    if(storyIdx < STORY.length-1){ storyIdx++; renderStory(); }
+    else { showScreen("rules"); }
+    return;
+  }
+  if(curScreen==="rules"){ roundIdx=0; showScreen("game"); return; }
+  if(curScreen==="game"){
+    // teacher force-skip current step to keep pace
+    forceAdvanceStep();
+    return;
+  }
+  if(curScreen==="finale"){ return; }
+}
+function goBack(){
+  if(curScreen==="story"){
+    if(storyIdx>0){ storyIdx--; renderStory(); } else { showScreen("title"); }
+    return;
+  }
+  if(curScreen==="rules"){ showScreen("story"); storyIdx=STORY.length-1; return; }
+  if(curScreen==="game"){
+    if(roundIdx>0){ roundIdx--; showScreen("game"); } else { showScreen("rules"); }
+    return;
+  }
+  if(curScreen==="finale"){ roundIdx=ROUNDS.length-1; showScreen("game"); return; }
+}
+function restartAll(){
+  clearTimers();
+  storyIdx=0; roundIdx=0; stepIdx=0; stars=0; phase="idle";
+  updateStars();
+  document.querySelectorAll(".stagegroup").forEach(function(g){ g.classList.remove("show"); });
+  showScreen("title");
+}
+
+/* ---------------- GAME ENGINE ---------------- */
+function clearTimers(){
+  if(beatTimer){ clearTimeout(beatTimer); beatTimer=null; }
+  if(demoTimer){ clearTimeout(demoTimer); demoTimer=null; }
+}
+function seqFor(idx){ return ROUNDS[idx].seq; }
+
+function setupRound(idx){
+  clearTimers();
+  stepIdx = 0;
+  phase = "demo";
+  $("roundDone").classList.add("hidden");
+  $("roundLabel").textContent = "Raundas " + (idx+1) + " · " + seqFor(idx).length + " žingsniai";
+  renderStepDots();
+  renderTeamButtons();
+  applyHouseStage(idx); // shows stages already completed
+  setMNote(MNOTES.game_demo);
+  $("retryCue").textContent = "";
+  $("promptBox").innerHTML = '<span>👀 Žiūrėkite taktą...</span>';
+  demoPlay(0);
+}
+
+function renderStepDots(){
+  var seq = seqFor(roundIdx);
+  var html = "";
+  seq.forEach(function(t,i){
+    html += '<div class="stepDot" data-i="'+i+'" style="border-color:'+teamColorVar(t)+'"></div>';
+  });
+  $("stepDots").innerHTML = html;
+}
+function teamColorVar(id){ return "var(--t"+id+")"; }
+
+function renderTeamButtons(){
+  var html = "";
+  TEAMS.forEach(function(t){
+    html += '<button class="teamBtn '+t.cls+'" data-team="'+t.id+'">' +
+      '<span class="kbadge">'+t.key+'</span>' +
+      '<svg class="ic" viewBox="0 0 100 100" style="color:'+t.color+'"><use href="'+t.icon+'"/></svg>' +
+      '<span class="nm">'+t.name+'</span></button>';
+  });
+  $("teamsRow").innerHTML = html;
+  document.querySelectorAll(".teamBtn").forEach(function(btn){
+    btn.addEventListener("click", function(){ onTeamPress(parseInt(btn.getAttribute("data-team"),10)); });
+  });
+}
+
+function applyHouseStage(idx){
+  // idx = current round index (0..2) => shows stages for completed rounds only
+  var stageIds = ["hs1","hs2","hs3"];
+  stageIds.forEach(function(id,i){ $(id).classList.toggle("show", i<idx); });
+  $("hsF").classList.remove("show");
+}
+
+/* --- DEMO PHASE: auto-play sequence --- */
+function demoPlay(i){
+  var seq = seqFor(roundIdx);
+  if(i>=seq.length){
+    demoTimer = setTimeout(function(){ startPlayPhase(); }, 500);
+    return;
+  }
+  highlightTeam(seq[i], true);
+  markStepDot(i, "active");
+  $("promptBox").innerHTML = '<span class="who" style="background:'+teamColorVar(seq[i])+';color:#111;">'+teamNameById(seq[i])+' šviečia</span>';
+  demoTimer = setTimeout(function(){
+    highlightTeam(seq[i], false);
+    demoTimer = setTimeout(function(){ demoPlay(i+1); }, 120);
+  }, BEAT_MS*0.65);
+}
+
+function teamNameById(id){
+  var t = TEAMS.filter(function(x){return x.id===id;})[0];
+  return t ? t.name : "";
+}
+
+/* --- PLAY PHASE --- */
+function startPlayPhase(){
+  phase = "play";
+  stepIdx = 0;
+  setMNote(MNOTES.game_play);
+  resetStepDots();
+  beatCycle();
+}
+function resetStepDots(){
+  document.querySelectorAll(".stepDot").forEach(function(d){ d.classList.remove("active","done"); });
+}
+function markStepDot(i, state){
+  var d = document.querySelector('.stepDot[data-i="'+i+'"]');
+  if(!d) return;
+  d.classList.remove("active","done");
+  if(state) d.classList.add(state);
+}
+
+function beatCycle(){
+  var seq = seqFor(roundIdx);
+  if(stepIdx>=seq.length){ onRoundComplete(); return; }
+  var team = seq[stepIdx];
+  markStepDot(stepIdx,"active");
+  $("promptBox").innerHTML = '<span class="who" style="background:'+teamColorVar(team)+';color:#111;">SPAUSK ' + teamNameById(team) + '!</span>';
+  highlightTeam(team, true);
+  $("retryCue").textContent = "";
+  startRing();
+  beatTimer = setTimeout(function(){
+    // timeout: didn't catch it in time, retry same step gently
+    highlightTeam(team, false);
+    $("retryCue").textContent = "🔁 Dar kartą — palaukite šviesos!";
+    setTimeout(function(){ if(phase==="play") beatCycle(); }, 260);
+  }, BEAT_MS);
+}
+
+function startRing(){
+  var ring = $("ringProgress");
+  ring.style.transition = "none";
+  ring.style.strokeDashoffset = "578";
+  // force reflow
+  void ring.offsetWidth;
+  ring.style.transition = "stroke-dashoffset "+BEAT_MS+"ms linear";
+  ring.style.strokeDashoffset = "0";
+}
+function stopRing(){
+  var ring = $("ringProgress");
+  ring.style.transition = "none";
+  ring.style.strokeDashoffset = "578";
+}
+
+function highlightTeam(teamId, on){
+  var btn = document.querySelector('.teamBtn[data-team="'+teamId+'"]');
+  if(!btn) return;
+  btn.classList.toggle("glow", on);
+}
+
+function onTeamPress(teamId){
+  if(curScreen!=="game" || phase!=="play") return;
+  var seq = seqFor(roundIdx);
+  var expected = seq[stepIdx];
+  var btn = document.querySelector('.teamBtn[data-team="'+teamId+'"]');
+  if(teamId===expected){
+    if(beatTimer){ clearTimeout(beatTimer); beatTimer=null; }
+    stopRing();
+    highlightTeam(teamId, false);
+    if(btn){ btn.classList.remove("bad"); btn.classList.add("ok"); setTimeout(function(){btn.classList.remove("ok");},480); }
+    markStepDot(stepIdx,"done");
+    stars++; updateStars();
+    stepIdx++;
+    $("retryCue").textContent = "";
+    setTimeout(function(){ if(phase==="play") beatCycle(); }, 320);
+  } else {
+    if(btn){ btn.classList.add("bad"); setTimeout(function(){btn.classList.remove("bad");},350); }
+  }
+}
+
+function forceAdvanceStep(){
+  // teacher helper: counts current step as done to keep the class moving
+  if(phase!=="play") return;
+  var seq = seqFor(roundIdx);
+  if(stepIdx>=seq.length) return;
+  onTeamPress(seq[stepIdx]);
+}
+
+function onRoundComplete(){
+  phase = "idle";
+  clearTimers();
+  applyHouseStage(roundIdx+1);
+  setMNote(MNOTES.roundDone);
+  var titles = ["Pamatai pastatyti!","Sienos pakilo!","Stogas uždėtas!"];
+  $("roundDoneTitle").textContent = titles[roundIdx] || "Raundas baigtas!";
+  $("roundDone").classList.remove("hidden");
+}
+
+$("btnNextRound") && $("btnNextRound").addEventListener("click", function(){
+  $("roundDone").classList.add("hidden");
+  if(roundIdx < ROUNDS.length-1){
+    roundIdx++;
+    setupRound(roundIdx);
+    updateProgress();
+  } else {
+    showScreen("finale");
+  }
+});
+
+/* ---------------- FINALE ---------------- */
+function runFinale(){
+  setMNote(MNOTES.finale);
+  var icons = document.querySelectorAll(".flIcon");
+  var i = 0;
+  icons.forEach(function(ic){ ic.classList.remove("on"); });
+  clearInterval(window.__finaleInt);
+  var loops = 0;
+  window.__finaleInt = setInterval(function(){
+    icons.forEach(function(ic){ ic.classList.remove("on"); });
+    if(i < icons.length){
+      icons[i].classList.add("on");
+      i++;
+    } else {
+      icons.forEach(function(ic){ ic.classList.add("on"); });
+      loops++;
+      i = 0;
+      if(loops>2){
+        clearInterval(window.__finaleInt);
+        setInterval(function(){ icons.forEach(function(ic){ ic.classList.toggle("on"); }); }, 700);
+      }
+    }
+  }, 420);
+}
+
+/* ---------------- EVENTS ---------------- */
+$("btnStart").addEventListener("click", goNext);
+$("btnToGame").addEventListener("click", goNext);
+$("btnNext").addEventListener("click", goNext);
+$("btnBack").addEventListener("click", goBack);
+$("btnRestart").addEventListener("click", restartAll);
+$("btnRestart2").addEventListener("click", restartAll);
+
+document.addEventListener("keydown", function(e){
+  if(e.key==="ArrowRight" || e.key==="Enter"){ goNext(); }
+  else if(e.key==="ArrowLeft"){ goBack(); }
+  else if(e.key==="r" || e.key==="R"){ restartAll(); }
+  else if(["1","2","3","4"].indexOf(e.key)>-1){ onTeamPress(parseInt(e.key,10)); }
+});
+
+/* init */
+updateStars();
+showScreen("title");
+
+})();
+</script>
+
+<!-- PA1-E28 v1 · Neuron 2026-08-14 -->
+</body>
+</html>

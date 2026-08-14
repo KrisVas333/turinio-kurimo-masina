@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PA1-E24 · Taisyklių kalvė</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#101c2e;color:#fff;overflow:hidden}
+#hud{position:fixed;top:0;left:0;right:0;height:56px;display:flex;align-items:center;gap:16px;padding:0 18px;background:#0a1220;border-bottom:2px solid #24405e;z-index:50}
+#hud .code{font-weight:800;color:#ffc44a;letter-spacing:1px}
+#hud .dots{display:flex;gap:6px;flex:1;justify-content:center}
+#hud .dot{width:14px;height:14px;border-radius:50%;background:#24405e}
+#hud .dot.on{background:#ffc44a;box-shadow:0 0 8px #ffc44a}
+#hud .pts{font-weight:800;font-size:22px;color:#ffd94a}
+.screen{position:absolute;top:56px;left:0;right:0;bottom:64px;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center}
+.screen.on{display:flex}
+#nav{position:fixed;bottom:0;left:0;right:0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:#0a1220;border-top:2px solid #24405e;z-index:50}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:14px;font-weight:800}
+.navbtn{background:#24405e;color:#fff;font-size:20px;padding:10px 26px}
+.navbtn.primary{background:#ffc44a;color:#1a1206}
+.navbtn:disabled{opacity:.3;cursor:default}
+h1{font-size:54px;margin-bottom:10px}
+h2{font-size:36px;margin-bottom:12px}
+.big{font-size:27px;line-height:1.35}
+.bubble{background:#fff;color:#14202e;border-radius:22px;padding:16px 22px;font-size:25px;font-weight:700;max-width:780px;margin:0 auto;position:relative}
+.bubble:after{content:"";position:absolute;top:-14px;left:60px;border:14px solid transparent;border-bottom-color:#fff;border-top:0}
+/* bird */
+#birdWrap{position:relative;margin-bottom:6px}
+.virus{position:absolute;font-size:30px;transition:opacity .6s,transform .6s}
+.virus.gone{opacity:0;transform:scale(2.2)}
+/* scenario */
+.sc-card{background:#182a42;border:3px solid #2f5279;border-radius:24px;padding:20px 28px;max-width:900px;width:100%}
+.sc-text{font-size:28px;font-weight:800;line-height:1.3;margin-bottom:14px;min-height:76px;display:flex;align-items:center;justify-content:center}
+.opts{display:flex;flex-direction:column;gap:12px;align-items:center}
+.opt{font-size:24px;padding:14px 26px;border-radius:16px;background:#24405e;color:#fff;min-width:560px;transition:transform .12s}
+.opt:hover{transform:scale(1.03)}
+.opt.dim{opacity:.35;pointer-events:none}
+.opt.right{background:#41d67c;color:#06331a}
+.explain{margin-top:12px;font-size:23px;font-weight:700;min-height:60px}
+.explain .ok{color:#41d67c}
+.explain .bad{color:#ff9d4a}
+/* rule forge */
+.forge{display:none;margin-top:10px}
+.forge.on{display:block}
+.forge .pick{display:flex;gap:16px;justify-content:center;margin-top:10px}
+.rulebtn{font-size:23px;padding:14px 22px;border-radius:16px;background:#ffc44a;color:#1a1206;max-width:420px}
+.hammer{font-size:64px;display:inline-block}
+.hammer.hit{animation:hit .5s}
+@keyframes hit{30%{transform:rotate(-45deg)}60%{transform:rotate(15deg)}}
+/* rules list */
+#rulesDone{display:flex;flex-direction:column;gap:8px;margin:10px auto;max-width:700px}
+.ruleline{background:#182a42;border-left:8px solid #ffc44a;border-radius:10px;padding:10px 16px;font-size:22px;font-weight:800;text-align:left;opacity:0;transform:translateX(-24px);transition:all .5s}
+.ruleline.on{opacity:1;transform:none}
+/* poster */
+#poster{background:#fff;color:#14202e;border-radius:20px;padding:26px 34px;max-width:720px;width:92%;text-align:center}
+#poster h3{font-size:34px;margin-bottom:4px}
+#poster .cls{font-size:22px;color:#666;margin-bottom:12px}
+#poster ol{text-align:left;font-size:24px;font-weight:800;line-height:1.7;padding-left:34px}
+#poster .foot{margin-top:12px;font-size:16px;color:#888}
+#clsInput{font-size:22px;padding:8px 14px;border-radius:10px;border:2px solid #24405e;width:320px;text-align:center;font-family:inherit}
+.badge{font-size:96px;animation:pop .6s}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+#mbtn{position:fixed;right:14px;bottom:74px;width:52px;height:52px;border-radius:50%;background:#ffd94a;color:#14202e;font-size:26px;z-index:60}
+#mpanel{position:fixed;right:14px;bottom:136px;width:380px;max-height:50vh;overflow:auto;background:#fffbe8;color:#222;border-radius:16px;padding:16px 18px;font-size:17px;line-height:1.45;display:none;z-index:60;text-align:left}
+#mpanel.on{display:block}
+#mpanel b{color:#8a5a00}
+.confetti{position:fixed;top:-20px;font-size:26px;z-index:100;animation:fall 2.6s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.small{font-size:20px;color:#8fa7c8;margin-top:10px}
+@media print{
+  body *{visibility:hidden}
+  #poster,#poster *{visibility:visible}
+  #poster{position:fixed;left:0;top:0;width:100%;border-radius:0;box-shadow:none}
+  #hud,#nav,#mbtn,#mpanel{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <span class="code">PA1-E24 · Taisyklių kalvė</span>
+  <div class="dots" id="dots"></div>
+  <span class="pts" id="pts">⭐ 0</span>
+</div>
+
+<!-- 0 TITLE -->
+<div class="screen on" id="s0">
+  <div style="font-size:100px">🔨🛡️</div>
+  <h1>Taisyklių kalvė</h1>
+  <p class="big">Garsinis Paukštis serga… Išgydykim jį —<br><b>nukalkim klasės saugumo taisykles!</b></p>
+  <p class="small">Mokytojau: spausk TOLIAU ▶ (arba rodyklę →)</p>
+</div>
+
+<!-- 1-2 COMICS -->
+<div class="screen" id="s1">
+  <div style="margin-bottom:14px">
+    <svg width="340" height="190" viewBox="0 0 340 190">
+      <rect x="0" y="0" width="340" height="190" rx="16" fill="#0a1220"/>
+      <rect x="40" y="30" width="110" height="70" rx="8" fill="#182a42" stroke="#2f5279" stroke-width="3"/>
+      <rect x="190" y="30" width="110" height="70" rx="8" fill="#182a42" stroke="#2f5279" stroke-width="3"/>
+      <circle cx="95" cy="65" r="16" fill="#7ee0ff" opacity=".7"/>
+      <circle cx="245" cy="65" r="16" fill="#41d67c" opacity=".7"/>
+      <text x="170" y="150" text-anchor="middle" font-size="17" fill="#8fa7c8">Tamsu… tik monitorių šviesa</text>
+    </svg>
+  </div>
+  <div class="bubble">Po pergalės prieš netikrą turnyrą visi jautėsi stipresni. Bet staiga…</div>
+</div>
+<div class="screen" id="s2">
+  <div id="introBird" style="margin-bottom:10px"></div>
+  <div class="bubble">Lunos Garsinis Paukštis! Jo akys <b style="color:#ff5470">RAUDONOS</b>, virš jo — keistas pranešimas su nuoroda. Kažkas bandė jį UŽKRĖSTI!</div>
+</div>
+
+<!-- 3 HOW -->
+<div class="screen" id="s3">
+  <h2>Planas 🔨</h2>
+  <p class="big">5 pavojingos situacijos.<br>Klasė išsirenka <b>teisingą veiksmą</b> —<br>ir nukala <b>vieną taisyklę</b>.<br><br>Kiekviena taisyklė išvalo vieną 🦠 nuo paukščio!</p>
+</div>
+
+<!-- 4 GAME -->
+<div class="screen" id="s4">
+  <div id="birdWrap"></div>
+  <div class="sc-card">
+    <div class="sc-text" id="scText"></div>
+    <div class="opts" id="opts"></div>
+    <div class="explain" id="explain"></div>
+    <div class="forge" id="forge">
+      <div class="big">🔨 Nukalkim taisyklę! Kuri formuluotė geresnė? <span class="hammer" id="hammer">🔨</span></div>
+      <div class="pick" id="rulePick"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 5 HEALED -->
+<div class="screen" id="s5">
+  <div id="healedBird"></div>
+  <h2 style="color:#41d67c">Paukštis pasveiko! 🎉</h2>
+  <div id="rulesDone"></div>
+</div>
+
+<!-- 6 POSTER -->
+<div class="screen" id="s6">
+  <div style="margin-bottom:10px">
+    <input id="clsInput" placeholder="Įrašyk klasės vardą (pvz., 2a)" maxlength="20">
+  </div>
+  <div id="poster">
+    <h3>🛡️ MŪSŲ KLASĖS 5 TAISYKLĖS</h3>
+    <div class="cls" id="posterCls">— klasė —</div>
+    <ol id="posterRules"></ol>
+    <div class="foot">Nukalta Taisyklių kalvėje · PA1-E24 · <span id="posterDate"></span></div>
+  </div>
+  <p style="margin-top:12px"><button class="navbtn primary" id="printBtn">🖨 Spausdinti plakatą</button></p>
+</div>
+
+<!-- 7 FINALE -->
+<div class="screen" id="s7">
+  <div class="badge">🏅</div>
+  <h2>Taisyklių kalviai!</h2>
+  <p class="big">Jūsų taisyklės saugos visą klasę.<br>Pakabinkit plakatą matomoje vietoje!</p>
+  <div class="bubble" style="margin-top:14px">Garsinis Paukštis: „Ačiū, draugai! Dabar žinau — jūs mane apsaugosit.“</div>
+</div>
+
+<div id="nav">
+  <button class="navbtn" id="back">◀ Atgal</button>
+  <button class="navbtn" id="restart">↻ Iš naujo</button>
+  <button class="navbtn primary" id="next">TOLIAU ▶</button>
+</div>
+
+<button id="mbtn" title="Mentoriaus užrašai (M)">M</button>
+<div id="mpanel"></div>
+
+<script>
+(function(){
+"use strict";
+var SCEN=[
+ {text:"🤖 AI vieną kartą sako VIENAIP, kitą kartą — KITAIP. Kuris atsakymas tikras?",
+  opts:["Patikrinu keliuose šaltiniuose","Patikiu pirmu atsakymu","Tiesiog spėju"],right:0,
+  why:"AI gali klysti! Tikrinam bent 2 vietose — knygoje, pas mokytoją, kitoje svetainėje.",
+  rules:["Tikrinu informaciją keliuose šaltiniuose","Visada patikiu, ką sako kompiuteris"],goodRule:0},
+ {text:"💥 Ekrane IŠŠOKO mirganti nuoroda: „SPAUSK ČIA DABAR!“",
+  opts:["Nespaudžiu ir pasakau suaugusiam","Greitai paspaudžiu","Paspaudžiu, bet tik vieną kartą"],right:0,
+  why:"Iššokančios „skubios“ nuorodos — dažniausi spąstai. Nespaudžiam!",
+  rules:["Įtartinų nuorodų nespaudžiu — pasakau suaugusiam","Nuorodas spaudžiu tik greitai"],goodRule:0},
+ {text:"💬 Nepažįstamas žmogus internete rašo tau žinutę.",
+  opts:["Neatsakau ir pasakau mokytojui ar tėvams","Atsakau mandagiai","Pasakau jam savo vardą"],right:0,
+  why:"Internete nežinai, kas iš tikrųjų rašo. Su nepažįstamais — tik su suaugusiu šalia.",
+  rules:["Su nepažįstamais internete nekalbu vienas","Su visais internete draugauju"],goodRule:0},
+ {text:"📝 Žaidimas prašo įrašyti tavo pavardę, adresą ir mokyklą.",
+  opts:["Neduodu savo duomenų","Įrašau viską teisingai","Įrašau tik adresą"],right:0,
+  why:"Vardas, adresas, mokykla — TAVO paslaptys. Žaidimui jų nereikia.",
+  rules:["Savo asmeninių duomenų internete neduodu","Duomenis duodu, jei žaidimas gražus"],goodRule:0},
+ {text:"📎 Draugas atsiuntė „juokingą“ failą — siūlo parsisiųsti.",
+  opts:["Prieš parsisiųsdamas paklausiu suaugusio","Parsisiunčiu iš karto","Persiunčiu visiems kitiems"],right:0,
+  why:"Failuose gali slėptis virusai — kaip tas, kuris užkrėtė Paukštį! Pirma klausiam.",
+  rules:["Prieš parsisiųsdamas paklausiu suaugusio","Failus siunčiuosi pats, niekam nesakęs"],goodRule:0}
+];
+var MNOTES={
+ s0:"<b>Įžanga (1 min):</b> priminkite E20 — išmokom atpažinti spąstus. Šiandien — patys kuriame apsaugą.",
+ s1:"Skaityti balsu, lėtai. Sukurkite „tamsios pamokos“ nuotaiką.",
+ s2:"Paklauskite: kaip manot, kas paukščiui nutiko? (kažkas atsiuntė virusą / užkrėstą nuorodą)",
+ s3:"<b>Tvarka:</b> situacija → klasė balsuoja rankomis už veiksmą → tada renkam taisyklės formuluotę iš 2. Taisyklę perskaitykite VISI KARTU garsiai.",
+ s4:"<b>5 scenarijai (~12 min).</b> Neteisingas pasirinkimas neužsidaro — vaikai bando dar kartą ir girdi paaiškinimą. Po taisyklės nukalimo — 🦠 nukrenta nuo paukščio.",
+ s5:"Perskaitykite visas 5 taisykles kartu su klase — choru!",
+ s6:"<b>Plakatas:</b> įrašykite klasės vardą ir spauskite 🖨. Atspausdintą pakabinkite klasėje — tai vaikų PAČIŲ sukurtos taisyklės.",
+ s7:"<b>Refleksija (2 min):</b> paklauskite — kurią taisyklę lengviausia pamiršti? Kodėl?"
+};
+var screens=["s0","s1","s2","s3","s4","s5","s6","s7"];
+var cur=0, pts=0, scIdx=0, phase="act", forged=[];
+var $=function(id){return document.getElementById(id)};
+
+function birdSVG(sick,size){
+  var eye = sick? "#ff3355" : "#1d2b3a";
+  var glowOp = sick? 0.0 : 0.5;
+  return '<svg width="'+size+'" height="'+(size*0.8)+'" viewBox="0 0 260 208">'+
+   '<ellipse cx="130" cy="196" rx="70" ry="10" fill="#000" opacity=".25"/>'+
+   '<circle cx="130" cy="110" r="62" fill="#7c5cff"/>'+
+   '<path d="M74 110 q-34 -6 -52 18 q26 4 40 -2 q-20 16 -30 34 q30 -6 46 -26 z" fill="#5c3fe0"/>'+
+   '<path d="M186 110 q34 -6 52 18 q-26 4 -40 -2 q20 16 30 34 q-30 -6 -46 -26 z" fill="#5c3fe0"/>'+
+   '<circle cx="130" cy="66" r="40" fill="#8f75ff"/>'+
+   '<circle cx="114" cy="60" r="10" fill="#fff"/><circle cx="146" cy="60" r="10" fill="#fff"/>'+
+   '<circle cx="114" cy="60" r="5.5" fill="'+eye+'"/><circle cx="146" cy="60" r="5.5" fill="'+eye+'"/>'+
+   '<polygon points="130,70 122,82 138,82" fill="#ffc44a"/>'+
+   '<path d="M96 40 q10 -18 24 -8 M164 40 q-10 -18 -24 -8" stroke="#5c3fe0" stroke-width="6" fill="none" stroke-linecap="round"/>'+
+   '<path d="M108 132 q22 18 44 0" stroke="#3d2a8f" stroke-width="5" fill="none" stroke-linecap="round"/>'+
+   '<circle cx="130" cy="105" r="80" fill="none" stroke="#41d67c" stroke-width="4" opacity="'+glowOp+'"/>'+
+  '</svg>';
+}
+var VPOS=[[18,10],[74,4],[52,58],[10,52],[80,50]];
+function drawBird(){
+  var w=$("birdWrap");
+  w.innerHTML=birdSVG(forged.length<5,240);
+  for(var i=0;i<5;i++){
+    var v=document.createElement("div");v.className="virus"+(i<forged.length?" gone":"");
+    v.textContent="🦠";v.style.left=VPOS[i][0]+"%";v.style.top=VPOS[i][1]+"%";
+    w.appendChild(v);
+  }
+}
+var MN;
+function mnote(){$("mpanel").innerHTML=MNOTES[screens[cur]]||"—";}
+function dots(){var d=$("dots");d.innerHTML="";for(var i=0;i<screens.length;i++){var s=document.createElement("div");s.className="dot"+(i<=cur?" on":"");d.appendChild(s);} }
+function hud(){$("pts").textContent="⭐ "+pts;}
+function show(i){
+  cur=Math.max(0,Math.min(screens.length-1,i));
+  for(var k=0;k<screens.length;k++) $(screens[k]).classList.toggle("on",k===cur);
+  dots();mnote();
+  $("next").disabled=(screens[cur]==="s4"&&forged.length<SCEN.length);
+  if(screens[cur]==="s2") $("introBird").innerHTML=birdSVG(true,220);
+  if(screens[cur]==="s4") loadScen();
+  if(screens[cur]==="s5") healed();
+  if(screens[cur]==="s6") poster();
+  if(screens[cur]==="s7") confetti(18);
+}
+function loadScen(){
+  drawBird();
+  if(scIdx>=SCEN.length){$("next").disabled=false;return;}
+  var s=SCEN[scIdx];phase="act";
+  $("scText").textContent=s.text;
+  $("explain").innerHTML="";
+  $("forge").classList.remove("on");
+  var o=$("opts");o.innerHTML="";
+  s.opts.forEach(function(txt,i){
+    var b=document.createElement("button");b.className="opt";b.textContent=txt;
+    b.onclick=function(){pickAct(i,b)};
+    o.appendChild(b);
+  });
+}
+function pickAct(i,btn){
+  if(phase!=="act")return;
+  var s=SCEN[scIdx];
+  if(i===s.right){
+    phase="forge";btn.classList.add("right");
+    Array.prototype.forEach.call(document.querySelectorAll(".opt"),function(b){if(b!==btn)b.classList.add("dim")});
+    $("explain").innerHTML='<span class="ok">TEISINGAI! '+s.why+'</span>';
+    pts+=10;hud();
+    var rp=$("rulePick");rp.innerHTML="";
+    s.rules.forEach(function(r,ri){
+      var b=document.createElement("button");b.className="rulebtn";b.textContent="„"+r+"“";
+      b.onclick=function(){pickRule(ri)};
+      rp.appendChild(b);
+    });
+    $("forge").classList.add("on");
+  }else{
+    btn.classList.add("dim");
+    $("explain").innerHTML='<span class="bad">Pagalvokim dar… kas mus SAUGO?</span>';
+  }
+}
+function pickRule(ri){
+  if(phase!=="forge")return;
+  var s=SCEN[scIdx];
+  if(ri===s.goodRule){
+    phase="done";
+    var h=$("hammer");h.classList.remove("hit");void h.offsetWidth;h.classList.add("hit");
+    forged.push(s.rules[s.goodRule]);
+    pts+=10;hud();confetti(8);
+    $("explain").innerHTML='<span class="ok">🔨 NUKALTA: „'+s.rules[s.goodRule]+'“ — 🦠 išvalytas!</span>';
+    $("forge").classList.remove("on");
+    scIdx++;
+    setTimeout(function(){
+      drawBird();
+      if(scIdx<SCEN.length){setTimeout(loadScen,900);}
+      else{$("explain").innerHTML+='<div class="ok" style="margin-top:8px">Visos 5 taisyklės nukaltos! Spausk TOLIAU ▶</div>';$("next").disabled=false;}
+    },700);
+  }else{
+    $("explain").innerHTML='<span class="bad">Ši formuluotė mūsų nesaugo. Rinkim kitą!</span>';
+  }
+}
+function healed(){
+  $("healedBird").innerHTML=birdSVG(false,220);
+  var rd=$("rulesDone");rd.innerHTML="";
+  forged.forEach(function(r,i){
+    var d=document.createElement("div");d.className="ruleline";d.textContent=(i+1)+". "+r;
+    rd.appendChild(d);setTimeout(function(){d.classList.add("on")},300*i);
+  });
+  confetti(14);
+}
+function poster(){
+  var ol=$("posterRules");ol.innerHTML="";
+  forged.forEach(function(r){var li=document.createElement("li");li.textContent=r;ol.appendChild(li);});
+  var d=new Date();
+  $("posterDate").textContent=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+$("clsInput").addEventListener("input",function(){
+  $("posterCls").textContent=this.value? this.value+" klasė" : "— klasė —";
+});
+$("printBtn").onclick=function(){window.print()};
+function confetti(n){
+  var em=["🎉","⭐","🔨","✨","🛡️"];
+  for(var i=0;i<n;i++){var s=document.createElement("div");s.className="confetti";
+    s.textContent=em[i%em.length];s.style.left=(5+Math.random()*90)+"vw";
+    s.style.animationDelay=(Math.random()*0.6)+"s";document.body.appendChild(s);
+    setTimeout(function(x){return function(){x.remove()}}(s),3200);}
+}
+function restart(){cur=0;pts=0;scIdx=0;forged=[];phase="act";hud();show(0);}
+$("next").onclick=function(){show(cur+1)};
+$("back").onclick=function(){show(cur-1)};
+$("restart").onclick=restart;
+$("mbtn").onclick=function(){$("mpanel").classList.toggle("on")};
+document.addEventListener("keydown",function(e){
+  if(e.target===$("clsInput"))return;
+  if(e.key==="ArrowRight"&&!$("next").disabled)show(cur+1);
+  if(e.key==="ArrowLeft")show(cur-1);
+  if(e.key==="r"||e.key==="R")restart();
+  if(e.key==="m"||e.key==="M")$("mpanel").classList.toggle("on");
+});
+hud();show(0);
+})();
+</script>
+
+<!-- PA1-E24 v1 · Neuron 2026-08-14 -->
+</body>
+</html>

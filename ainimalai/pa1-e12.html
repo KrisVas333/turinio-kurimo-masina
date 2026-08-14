@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PA1-E12 · Reklamos dirbtuvės</title>
+<style>
+  :root{
+    --bg1:#150a30; --bg2:#2a1259; --panel:#1e0f42; --panel2:#2b1560;
+    --cyan:#2fe6d1; --magenta:#ff3ec9; --gold:#ffd23f; --lime:#8dff5c;
+    --white:#fbfbff; --ink:#120826; --muted:#b9aee0;
+    --r:18px;
+    --fs-h1: clamp(22px, 3.6vh, 44px);
+    --fs-h2: clamp(16px, 2.6vh, 30px);
+    --fs-body: clamp(14px, 2.2vh, 24px);
+    --fs-btn: clamp(14px, 2.1vh, 22px);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;padding:0;overflow:hidden;background:var(--bg1);}
+  body{
+    font-family: 'Trebuchet MS','Segoe UI',Verdana,sans-serif;
+    color:var(--white);
+    background:
+      radial-gradient(circle at 15% 20%, #3a1d78 0%, transparent 45%),
+      radial-gradient(circle at 85% 75%, #4a1650 0%, transparent 50%),
+      linear-gradient(180deg, var(--bg1), var(--bg2));
+    width:100vw; height:100vh; position:relative;
+  }
+  #stars{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.6;}
+  #app{position:relative;z-index:1;width:100vw;height:100vh;display:flex;flex-direction:column;}
+
+  /* TOP BAR */
+  #topbar{
+    flex:0 0 auto; display:flex; align-items:center; gap:12px;
+    padding:10px 18px; background:rgba(10,4,28,.55); border-bottom:2px solid #4a2f8f;
+    backdrop-filter:blur(2px);
+  }
+  #lessoncode{font-weight:900; letter-spacing:1px; background:var(--magenta); color:var(--ink);
+    padding:4px 12px; border-radius:999px; font-size:var(--fs-btn); box-shadow:0 0 14px rgba(255,62,201,.6); white-space:nowrap;}
+  #progresswrap{flex:1; display:flex; gap:6px; justify-content:center; align-items:center;}
+  .pdot{width:14px;height:14px;border-radius:50%;background:#4a3a7d;border:2px solid #7a63c9;transition:.25s;}
+  .pdot.done{background:var(--lime); border-color:var(--lime); box-shadow:0 0 8px var(--lime);}
+  .pdot.now{background:var(--gold); border-color:var(--gold); box-shadow:0 0 12px var(--gold); transform:scale(1.3);}
+  #points{display:flex; align-items:center; gap:6px; background:var(--panel2); border:2px solid var(--gold);
+    border-radius:999px; padding:4px 14px; font-weight:900; font-size:var(--fs-btn); white-space:nowrap;}
+  #points .star{filter:drop-shadow(0 0 4px var(--gold));}
+
+  /* STAGE */
+  #stage{flex:1 1 auto; overflow:hidden; position:relative; display:flex; align-items:stretch; justify-content:center;}
+  .screen{width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: 1.2vh 2vw; gap:1vh; animation:fadein .35s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+  h1.title{font-size:var(--fs-h1); margin:0; text-align:center; text-shadow:0 0 16px rgba(255,62,201,.5); font-weight:900;}
+  h2.sub{font-size:var(--fs-h2); margin:0; text-align:center; color:var(--gold); font-weight:800;}
+  p.kidtext{font-size:var(--fs-body); text-align:center; margin:2px 0; font-weight:700; max-width:900px;}
+
+  /* NAV BAR */
+  #navbar{flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 18px; background:rgba(10,4,28,.55); border-top:2px solid #4a2f8f;}
+  .navbtn{font-family:inherit; font-weight:900; font-size:var(--fs-btn); padding:12px 22px; border-radius:999px;
+    border:3px solid var(--cyan); background:var(--panel2); color:var(--white); cursor:pointer; transition:.15s;}
+  .navbtn:hover{transform:translateY(-2px) scale(1.03); box-shadow:0 4px 16px rgba(47,230,209,.5);}
+  .navbtn:active{transform:translateY(0) scale(.98);}
+  .navbtn.primary{background:var(--cyan); color:var(--ink); border-color:var(--white);}
+  #dots{display:flex; gap:4px;}
+
+  /* M NOTE */
+  #mnote{position:fixed; left:14px; bottom:78px; z-index:20; max-width:340px;}
+  #mtoggle{font-family:inherit; font-weight:900; font-size:16px; background:var(--gold); color:var(--ink);
+    border:3px solid var(--ink); border-radius:14px; padding:8px 12px; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,.4);}
+  #mtext{display:none; margin-top:8px; background:#fff8e0; color:#3a2b00; border:3px solid var(--ink); border-radius:14px;
+    padding:12px 14px; font-size:15px; line-height:1.4; font-style:italic; box-shadow:0 6px 20px rgba(0,0,0,.5);}
+  #mnote.open #mtext{display:block;}
+  #mtext b{font-style:normal;}
+
+  /* GENERIC UI */
+  .row{display:flex; gap:14px; flex-wrap:wrap; justify-content:center; align-items:stretch;}
+  .card{background:var(--panel); border:3px solid #5c3fb0; border-radius:var(--r); padding:10px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:4px; transition:.15s; min-width:100px;}
+  .card:hover{transform:translateY(-3px); border-color:var(--cyan);}
+  .card.sel{border-color:var(--lime); background:#1c3a1a; box-shadow:0 0 16px rgba(141,255,92,.6);}
+  .card .emoji{font-size: clamp(22px,4vh,44px);}
+  .card .label{font-size:var(--fs-btn); font-weight:900; text-align:center;}
+  .badge{position:absolute; top:-10px; right:-10px; background:var(--lime); color:var(--ink); border-radius:50%;
+    width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:16px;}
+
+  .posterbox{background:#0b0620; border:6px solid #3a2470; border-radius:14px; padding:8px; box-shadow:0 10px 30px rgba(0,0,0,.55);}
+  .posterbox svg{display:block; width: clamp(140px, 24vh, 300px); height:auto;}
+
+  .layout2{display:flex; gap:2vw; align-items:center; justify-content:center; width:100%; flex-wrap:wrap;}
+  .panel{background:rgba(20,10,45,.7); border:2px solid #4a2f8f; border-radius:var(--r); padding:14px 18px;}
+
+  .cognit{display:flex; align-items:center; gap:16px; justify-content:center;}
+  .bubble{background:#fff; color:#1a1030; border-radius:20px; padding:14px 20px; font-weight:800; font-size:var(--fs-body);
+    position:relative; max-width:520px; box-shadow:0 6px 16px rgba(0,0,0,.4);}
+  .bubble:after{content:""; position:absolute; left:-16px; top:30px; border:12px solid transparent; border-right-color:#fff;}
+
+  .flash{animation:flashpop .5s ease;}
+  @keyframes flashpop{0%{filter:brightness(2.4) saturate(1.6);}100%{filter:none;}}
+
+  .hint{background:#2b1560; border:2px dashed var(--gold); border-radius:14px; padding:8px 14px; font-size:var(--fs-btn);
+    font-weight:800; color:var(--gold);}
+
+  .confetti-layer{position:fixed; inset:0; pointer-events:none; z-index:30;}
+  .confetto{position:absolute; width:10px; height:10px; top:-20px; opacity:.95; border-radius:2px;}
+
+  /* MUSEUM */
+  .wall{background: repeating-linear-gradient(90deg,#3a2b1c,#3a2b1c 40px,#33251a 40px,#33251a 80px);
+    border-radius:14px; padding:26px; display:flex; gap:26px; flex-wrap:wrap; justify-content:center; align-items:flex-end;}
+  .frameitem{background:#241408; border:10px solid #7a5230; border-radius:6px; padding:6px; position:relative; cursor:pointer;
+    box-shadow:0 8px 22px rgba(0,0,0,.5); transition:.2s;}
+  .frameitem:hover{transform:translateY(-4px) scale(1.03);}
+  .frameitem svg{width:clamp(90px,15vh,170px); display:block;}
+  .plaque{background:#d8b46a; color:#3a2200; text-align:center; font-size:12px; font-weight:900; border-radius:3px;
+    margin-top:4px; padding:2px 4px;}
+  .spot{position:absolute; top:-30px; left:50%; transform:translateX(-50%); width:110%; height:60px;
+    background:radial-gradient(ellipse at center, rgba(255,230,150,.35), transparent 70%); pointer-events:none;}
+
+  #modal{position:fixed; inset:0; background:rgba(5,2,14,.88); z-index:40; display:none; align-items:center; justify-content:center;}
+  #modal.open{display:flex;}
+  #modal .posterbox svg{width:clamp(220px,50vh,420px);}
+  #modalclose{position:absolute; top:20px; right:26px; font-size:30px; background:none; border:none; color:#fff; cursor:pointer;}
+
+  .medal{width:clamp(90px,18vh,180px);}
+  kbd{background:#000; border:2px solid #666; border-radius:6px; padding:1px 6px; font-family:monospace;}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div id="app">
+  <header id="topbar">
+    <div id="lessoncode">PA1-E12</div>
+    <div id="progresswrap"></div>
+    <div id="points"><span class="star">⭐</span><span id="ptsval">0</span></div>
+  </header>
+
+  <main id="stage"></main>
+
+  <nav id="navbar">
+    <button class="navbtn" id="prevBtn">← ATGAL</button>
+    <button class="navbtn" id="restartBtn" title="Klaviatūra: R">⟲ IŠ NAUJO</button>
+    <button class="navbtn primary" id="nextBtn">TOLIAU →</button>
+  </nav>
+</div>
+
+<div id="mnote" class="closed">
+  <button id="mtoggle">🧑‍🏫 M — mokytojui</button>
+  <div id="mtext"></div>
+</div>
+
+<div id="modal">
+  <button id="modalclose">✕</button>
+  <div id="modalcontent"></div>
+</div>
+
+<div class="confetti-layer" id="confetti"></div>
+
+<script>
+/* ============================================================
+   PA1-E12 — „Reklamos dirbtuvės" — RA AInimalai skaitmeninė pamoka
+   Vanilla JS, jokių išorinių resursų. Procedūrinis SVG plakatų kompozitorius.
+   ============================================================ */
+(function(){
+"use strict";
+
+/* ---------- STARFIELD BACKGROUND (decorative canvas, cheap) ---------- */
+const starCanvas = document.getElementById('stars');
+const sctx = starCanvas.getContext('2d');
+function sizeStars(){ starCanvas.width = innerWidth; starCanvas.height = innerHeight; drawStars(); }
+let starPts = [];
+function drawStars(){
+  if(starPts.length === 0){
+    for(let i=0;i<140;i++) starPts.push({x:Math.random(), y:Math.random(), r:Math.random()*1.6+0.4, a:Math.random()*.6+.3});
+  }
+  sctx.clearRect(0,0,starCanvas.width, starCanvas.height);
+  sctx.fillStyle = '#fff';
+  starPts.forEach(p=>{
+    sctx.globalAlpha = p.a;
+    sctx.beginPath();
+    sctx.arc(p.x*starCanvas.width, p.y*starCanvas.height, p.r, 0, 7);
+    sctx.fill();
+  });
+  sctx.globalAlpha = 1;
+}
+window.addEventListener('resize', sizeStars);
+sizeStars();
+
+/* ---------- DATA: prompt parts ---------- */
+const KAS_OPTS = [
+  {id:'gyvate', label:'SPEKTRINĖ GYVATĖ', emoji:'🐍'},
+  {id:'paukstis', label:'GARSINIS PAUKŠTIS', emoji:'🦜'},
+  {id:'bugas', label:'BUGAS', emoji:'🪲'},
+  {id:'bliksonas', label:'BLIKSONAS', emoji:'🐕'}
+];
+const KADARO_OPTS = [
+  {id:'geria', label:'GERIA', emoji:'🥤'},
+  {id:'soka', label:'ŠOKA', emoji:'💃'},
+  {id:'spindi', label:'ŠVYTI', emoji:'✨'},
+  {id:'skrenda', label:'SKRENDA', emoji:'🚀'}
+];
+const STILIUS_OPTS = [
+  {id:'neon', label:'NEONAS', emoji:'💡'},
+  {id:'retro', label:'RETRO', emoji:'📻'},
+  {id:'komiksas', label:'KOMIKSAS', emoji:'💥'},
+  {id:'akvarele', label:'AKVARELĖ', emoji:'🎨'}
+];
+const FONAS_OPTS = [
+  {id:'kalnai', label:'KALNAI', emoji:'⛰️'},
+  {id:'miestas', label:'MIESTAS', emoji:'🏙️'},
+  {id:'kosmosas', label:'KOSMOSAS', emoji:'🌌'},
+  {id:'papludimys', label:'PAPLŪDIMYS', emoji:'🏖️'}
+];
+const SLOGAN_OPTS = [
+  'SKANU KAIP ŽAIBAS!',
+  'GALIA KIEKVIENAME GURKŠNYJE!',
+  'GERK IR ŠVYSK!',
+  'TAVO ENERGIJA ČIA!'
+];
+function byId(arr,id){ return arr.find(o=>o.id===id); }
+
+/* ---------- SVG POSTER COMPOSITOR ---------- */
+let UIDC = 0;
+function uid(){ return 'u'+(UIDC++); }
+
+function buildGyvate(){
+  return `
+    <path d="M -95,55 C -60,-25 -20,80 8,10 C 28,-45 68,45 92,-25" fill="none" stroke="url(#snakeGrad)" stroke-width="24" stroke-linecap="round"/>
+    <circle cx="92" cy="-25" r="19" fill="#ff5fa2"/>
+    <circle cx="86" cy="-30" r="4.5" fill="#fff"/><circle cx="86" cy="-30" r="2" fill="#1a1030"/>
+    <circle cx="99" cy="-30" r="4.5" fill="#fff"/><circle cx="99" cy="-30" r="2" fill="#1a1030"/>
+    <path d="M 92,-9 l -3,10 m 3,-10 l 5,9" stroke="#c8005c" stroke-width="2" fill="none" stroke-linecap="round"/>
+  `;
+}
+function buildPaukstis(){
+  return `
+    <ellipse cx="0" cy="10" rx="38" ry="32" fill="#5b7cff"/>
+    <path d="M -30,-4 A 30 30 0 0 1 4,-30" stroke="#c9d4ff" stroke-width="4" fill="none" opacity=".8"/>
+    <path d="M -22,10 A 22 22 0 0 1 4,-10" stroke="#c9d4ff" stroke-width="4" fill="none" opacity=".8"/>
+    <polygon points="8,-26 -2,-38 18,-40" fill="#ffcd3c"/>
+    <polygon points="-2,-38 18,-40 8,-30" fill="#ffe083"/>
+    <circle cx="30" cy="-6" r="24" fill="#7d97ff"/>
+    <circle cx="38" cy="-12" r="5" fill="#fff"/><circle cx="39" cy="-12" r="2.4" fill="#1a1030"/>
+    <polygon points="52,-8 66,-4 52,2" fill="#ffb020"/>
+    <polygon points="-30,30 -46,42 -30,40" fill="#3f5ce0"/>
+    <polygon points="-10,34 -8,50 4,36" fill="#3f5ce0"/>
+    <line x1="-6" y1="40" x2="-8" y2="54" stroke="#2a3fae" stroke-width="3"/>
+    <line x1="6" y1="40" x2="8" y2="54" stroke="#2a3fae" stroke-width="3"/>
+  `;
+}
+function buildBugas(){
+  return `
+    <ellipse cx="0" cy="6" rx="44" ry="36" fill="#2fbf8f"/>
+    <path d="M 0,-30 L 0,42" stroke="#1c8c66" stroke-width="3"/>
+    <path d="M -30,-6 h14 M -34,6 h18 M -30,18 h14" stroke="#bff7e3" stroke-width="2.5" opacity=".8"/>
+    <path d="M 30,-6 h-14 M 34,6 h-18 M 30,18 h-14" stroke="#bff7e3" stroke-width="2.5" opacity=".8"/>
+    <circle cx="0" cy="-32" r="14" fill="#1c8c66"/>
+    <circle cx="-5" cy="-34" r="3.4" fill="#fff"/><circle cx="-5" cy="-34" r="1.6" fill="#0a2018"/>
+    <circle cx="5" cy="-34" r="3.4" fill="#fff"/><circle cx="5" cy="-34" r="1.6" fill="#0a2018"/>
+    <path d="M -6,-44 C -14,-54 -20,-50 -22,-42" stroke="#1c8c66" stroke-width="2.5" fill="none"/>
+    <path d="M 6,-44 C 14,-54 20,-50 22,-42" stroke="#1c8c66" stroke-width="2.5" fill="none"/>
+    <line x1="-40" y1="-6" x2="-58" y2="-16" stroke="#0a2018" stroke-width="3"/>
+    <line x1="-42" y1="8" x2="-60" y2="8" stroke="#0a2018" stroke-width="3"/>
+    <line x1="-40" y1="22" x2="-58" y2="32" stroke="#0a2018" stroke-width="3"/>
+    <line x1="40" y1="-6" x2="58" y2="-16" stroke="#0a2018" stroke-width="3"/>
+    <line x1="42" y1="8" x2="60" y2="8" stroke="#0a2018" stroke-width="3"/>
+    <line x1="40" y1="22" x2="58" y2="32" stroke="#0a2018" stroke-width="3"/>
+  `;
+}
+function buildBliksonas(){
+  return `
+    <rect x="-18" y="30" width="14" height="26" rx="6" fill="#ffcb3d"/>
+    <rect x="8" y="30" width="14" height="26" rx="6" fill="#ffcb3d"/>
+    <ellipse cx="-4" cy="6" rx="46" ry="30" fill="#ffcb3d"/>
+    <polygon points="26,26 46,44 30,10" fill="#2fa2ff"/>
+    <circle cx="24" cy="-16" r="26" fill="#ffd766"/>
+    <polygon points="4,-40 -6,-16 8,-18 -2,4" fill="#2fa2ff"/>
+    <polygon points="46,-30 60,-42 50,-18" fill="#ffcb3d"/>
+    <circle cx="32" cy="-18" r="4.6" fill="#fff"/><circle cx="33" cy="-18" r="2.1" fill="#1a1030"/>
+    <circle cx="16" cy="-14" r="4" fill="#fff"/><circle cx="17" cy="-14" r="1.9" fill="#1a1030"/>
+    <ellipse cx="24" cy="-4" rx="4" ry="3" fill="#8a5a10"/>
+    <path d="M 18,4 Q 24,10 30,4" stroke="#8a5a10" stroke-width="2" fill="none" stroke-linecap="round"/>
+  `;
+}
+const CHAR_BUILDERS = {gyvate:buildGyvate, paukstis:buildPaukstis, bugas:buildBugas, bliksonas:buildBliksonas};
+
+function buildFonasKalnai(){
+  return `
+    <rect width="400" height="520" fill="url(#skyDay)"/>
+    <circle cx="330" cy="90" r="34" fill="#ffe066"/>
+    <polygon points="0,320 110,170 210,320" fill="#5b7a63"/>
+    <polygon points="120,320 240,140 360,320" fill="#3f5c49"/>
+    <polygon points="230,320 320,210 400,320" fill="#6a8f74"/>
+    <rect y="300" width="400" height="220" fill="#78c26a"/>
+    <polygon points="40,300 55,260 70,300" fill="#2e5c33"/>
+    <polygon points="330,300 348,255 366,300" fill="#2e5c33"/>
+  `;
+}
+function buildFonasMiestas(){
+  return `
+    <rect width="400" height="520" fill="url(#skyDusk)"/>
+    <path d="M 330,110 A 24 24 0 1 1 300,90 A 18 18 0 1 0 330,110 Z" fill="#ffe9b0"/>
+    <rect x="20" y="230" width="46" height="140" fill="#2c1e57"/>
+    <rect x="76" y="180" width="54" height="190" fill="#3a2769"/>
+    <rect x="140" y="250" width="40" height="120" fill="#2c1e57"/>
+    <rect x="190" y="150" width="60" height="220" fill="#43308a"/>
+    <rect x="260" y="210" width="46" height="160" fill="#2c1e57"/>
+    <rect x="316" y="190" width="56" height="180" fill="#3a2769"/>
+    ${[[30,250],[30,280],[30,310],[86,200],[86,230],[86,260],[86,290],[150,270],[150,300],[200,180],[200,210],[200,240],[200,270],[270,240],[270,270],[270,300],[326,220],[326,250],[326,280],[326,310]]
+      .map(p=>`<rect x="${p[0]}" y="${p[1]}" width="10" height="12" fill="#ffd35c" opacity="${(p[0]+p[1])%3===0?0.5:0.95}"/>`).join('')}
+    <rect y="370" width="400" height="150" fill="#1a1030"/>
+  `;
+}
+function buildFonasKosmosas(){
+  const stars = Array.from({length:34}).map(()=>{
+    const x=(Math.random()*400).toFixed(0), y=(Math.random()*520).toFixed(0), r=(Math.random()*1.8+0.5).toFixed(1);
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${(Math.random()*.6+.4).toFixed(2)}"/>`;
+  }).join('');
+  return `
+    <rect width="400" height="520" fill="url(#skySpace)"/>
+    ${stars}
+    <ellipse cx="90" cy="120" rx="40" ry="40" fill="#ff9d5c"/>
+    <ellipse cx="90" cy="120" rx="66" ry="14" fill="none" stroke="#ffd08a" stroke-width="6" opacity=".8" transform="rotate(-18 90 120)"/>
+    <polygon points="330,80 338,98 356,100 342,112 346,130 330,120 314,130 318,112 304,100 322,98" fill="#ffe066"/>
+    <polygon points="60,420 66,432 78,434 68,442 71,454 60,447 49,454 52,442 42,434 54,432" fill="#8dfffb"/>
+  `;
+}
+function buildFonasPaplūdimys(){
+  return `
+    <rect width="400" height="300" fill="url(#skyDay)"/>
+    <circle cx="330" cy="80" r="36" fill="#ffe066"/>
+    <rect y="230" width="400" height="90" fill="#4fb6e6"/>
+    ${[0,1,2,3,4].map(i=>`<path d="M ${i*90-10},${250+ (i%2)*10} q 40,-14 80,0" stroke="#eaffff" stroke-width="4" fill="none" opacity=".7"/>`).join('')}
+    <rect y="300" width="400" height="220" fill="#f2dfa0"/>
+    <path d="M 60,300 C 60,230 30,190 20,150" stroke="#7a4a20" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <polygon points="20,150 -20,120 10,110" fill="#2e8f4e"/>
+    <polygon points="20,150 60,110 30,105" fill="#379c56"/>
+    <polygon points="20,150 20,90 55,130" fill="#2e8f4e"/>
+  `;
+}
+const FONAS_BUILDERS = {kalnai:buildFonasKalnai, miestas:buildFonasMiestas, kosmosas:buildFonasKosmosas, papludimys:buildFonasPaplūdimys};
+
+function buildActionGeria(){
+  return `
+    <g transform="translate(58,26)">
+      <rect x="-12" y="-30" width="24" height="46" rx="6" fill="#ff5fa2"/>
+      <rect x="-12" y="-30" width="24" height="10" rx="4" fill="#ffe066"/>
+      <circle cx="0" cy="-40" r="9" fill="none" stroke="#ffe066" stroke-width="3"/>
+      <path d="M 0,-42 L -18,-58" stroke="#dfe" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="-30" cy="-70" r="4" fill="#bff" opacity=".8"/>
+      <circle cx="-22" cy="-84" r="3" fill="#bff" opacity=".6"/>
+    </g>`;
+}
+function buildActionSoka(){
+  return `
+    <g stroke="#ffe066" stroke-width="3" fill="none" opacity=".85">
+      <path d="M -90,-40 q 20,-10 30,10"/>
+      <path d="M 90,-40 q -20,-10 -30,10"/>
+      <path d="M -100,30 q 15,10 20,-6"/>
+      <path d="M 100,30 q -15,10 -20,-6"/>
+    </g>
+    <g fill="#ffd23f">
+      <polygon points="-100,-70 -96,-60 -86,-60 -94,-53 -91,-43 -100,-49 -109,-43 -106,-53 -114,-60 -104,-60"/>
+      <polygon points="105,-55 108,-47 116,-47 110,-42 112,-34 105,-39 98,-34 100,-42 94,-47 102,-47"/>
+    </g>`;
+}
+function buildActionSpindi(){
+  return `
+    <circle cx="0" cy="0" r="95" fill="none" stroke="#ffe066" stroke-width="3" opacity=".55"/>
+    <circle cx="0" cy="0" r="115" fill="none" stroke="#ffe066" stroke-width="2" opacity=".3"/>
+    <circle cx="0" cy="0" r="135" fill="none" stroke="#ffe066" stroke-width="2" opacity=".18"/>
+    <g fill="#fff9d0">
+      <polygon points="0,-118 5,-108 15,-108 7,-101 10,-91 0,-97 -10,-91 -7,-101 -15,-108 -5,-108"/>
+      <polygon points="105,20 109,28 118,28 111,34 113,43 105,38 97,43 99,34 92,28 101,28"/>
+      <polygon points="-105,-20 -101,-13 -93,-13 -100,-8 -98,0 -105,-4 -112,0 -110,-8 -117,-13 -109,-13"/>
+    </g>`;
+}
+function buildActionSkrenda(){
+  return `
+    <g stroke="#cfe0ff" stroke-width="3" opacity=".8" stroke-linecap="round">
+      <line x1="-140" y1="-10" x2="-95" y2="-4"/>
+      <line x1="-140" y1="14" x2="-100" y2="18"/>
+      <line x1="-135" y1="38" x2="-100" y2="40"/>
+    </g>
+    <ellipse cx="0" cy="118" rx="46" ry="12" fill="#dfe9ff" opacity=".7"/>
+    <ellipse cx="-30" cy="126" rx="26" ry="9" fill="#dfe9ff" opacity=".55"/>`;
+}
+const ACTION_BUILDERS = {geria:buildActionGeria, soka:buildActionSoka, spindi:buildActionSpindi, skrenda:buildActionSkrenda};
+
+const STYLE_DEFS = {
+  neon:{
+    banner:['#0ff3e3','#1a1030'],
+    defs:(u)=>`<filter id="glow_${u}" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>`,
+    filterId:(u)=>`glow_${u}`,
+    overlay:()=>`<rect width="400" height="520" fill="#0a0620" opacity=".38"/>
+      ${Array.from({length:6}).map((_,i)=>`<line x1="${i*70}" y1="0" x2="${i*70}" y2="520" stroke="#2fe6d1" stroke-width="1" opacity=".18"/>`).join('')}
+      ${Array.from({length:8}).map((_,i)=>`<line x1="0" y1="${i*65}" x2="400" y2="${i*65}" stroke="#2fe6d1" stroke-width="1" opacity=".14"/>`).join('')}`,
+    frame:()=>`<rect x="6" y="6" width="388" height="508" rx="16" fill="none" stroke="#2fe6d1" stroke-width="6" opacity=".9"/>
+      <rect x="14" y="14" width="372" height="492" rx="12" fill="none" stroke="#ff3ec9" stroke-width="2.5" opacity=".8"/>`
+  },
+  retro:{
+    banner:['#e8c98a','#3a2200'],
+    defs:(u)=>`<filter id="sep_${u}"><feColorMatrix type="matrix" values="0.6 0.3 0.1 0 0.05  0.25 0.55 0.1 0 0.05  0.15 0.2 0.4 0 0.02  0 0 0 1 0"/></filter>`,
+    filterId:(u)=>`sep_${u}`,
+    overlay:()=>`<rect width="400" height="520" fill="#ffedcc" opacity=".22"/>
+      ${Array.from({length:40}).map(()=>`<circle cx="${(Math.random()*400).toFixed(0)}" cy="${(Math.random()*520).toFixed(0)}" r="1.4" fill="#5a4325" opacity=".18"/>`).join('')}`,
+    frame:()=>`<rect x="10" y="10" width="380" height="500" rx="4" fill="none" stroke="#caa763" stroke-width="14"/>
+      <rect x="24" y="24" width="352" height="472" rx="2" fill="none" stroke="#7a5a28" stroke-width="2" stroke-dasharray="6 6"/>`
+  },
+  komiksas:{
+    banner:['#ffe066','#1a1030'],
+    defs:(u)=>`<filter id="cx_${u}"><feColorMatrix type="saturate" values="1.5"/></filter>
+      <pattern id="dots_${u}" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="2" fill="#000" opacity=".14"/></pattern>`,
+    filterId:(u)=>`cx_${u}`,
+    overlay:(u)=>`<rect width="400" height="520" fill="url(#dots_${u})"/>`,
+    frame:()=>`<rect x="8" y="8" width="384" height="504" rx="6" fill="none" stroke="#000" stroke-width="10"/>
+      <polygon points="20,20 34,20 27,34" fill="#ff3ec9"/>
+      <polygon points="380,20 366,20 373,34" fill="#2fe6d1"/>
+      <polygon points="20,500 34,500 27,486" fill="#ffe066"/>
+      <polygon points="380,500 366,500 373,486" fill="#8dff5c"/>`
+  },
+  akvarele:{
+    banner:['#ffd7e8','#5a2340'],
+    defs:(u)=>`<filter id="wc_${u}"><feGaussianBlur stdDeviation="1.1"/></filter>`,
+    filterId:(u)=>`wc_${u}`,
+    overlay:()=>`
+      <circle cx="80" cy="140" r="90" fill="#ffd7e8" opacity=".22"/>
+      <circle cx="320" cy="380" r="110" fill="#c9e8ff" opacity=".22"/>
+      <circle cx="220" cy="90" r="70" fill="#fff2c2" opacity=".22"/>`,
+    frame:()=>`<path d="M 10,10 Q 200,0 390,10 Q 400,260 390,510 Q 200,520 10,510 Q 0,260 10,10 Z"
+        fill="none" stroke="#fff" stroke-width="16" opacity=".9"/>
+      <path d="M 60,10 q 4,20 -6,26" stroke="#c9e8ff" stroke-width="4" fill="none" opacity=".8"/>
+      <path d="M 300,10 q 6,26 -4,34" stroke="#ffd7e8" stroke-width="4" fill="none" opacity=".8"/>`
+  }
+};
+
+function bannerMarkup(sloganIdx, style){
+  const text = SLOGAN_OPTS[sloganIdx];
+  const fs = text.length > 24 ? 17 : 22;
+  const cols = style.banner;
+  return `
+    <g transform="translate(0,460)">
+      <polygon points="0,0 400,0 400,60 0,60" fill="${cols[0]}"/>
+      <polygon points="0,0 20,30 0,60" fill="${cols[0]}" opacity=".6"/>
+      <polygon points="400,0 380,30 400,60" fill="${cols[0]}" opacity=".6"/>
+      <text x="200" y="37" text-anchor="middle" font-family="Trebuchet MS, sans-serif" font-weight="900"
+        font-size="${fs}" fill="${cols[1]}">${text}</text>
+    </g>`;
+}
+
+function generatePosterSVG(parts){
+  const u = uid();
+  const style = STYLE_DEFS[parts.stilius];
+  const fonas = FONAS_BUILDERS[parts.fonas]();
+  const overlay = style.overlay(u);
+  const fdefs = style.defs(u);
+  const charInner = CHAR_BUILDERS[parts.kas]();
+  const fx = ACTION_BUILDERS[parts.kadaro]();
+  const frame = style.frame(u);
+  const banner = bannerMarkup(parts.sloganIdx, style);
+  const wobble = parts.kadaro === 'soka' ? ' rotate(-6)' : '';
+  return `<svg viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="skyDay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd6ff"/><stop offset="1" stop-color="#e8f8ff"/></linearGradient>
+      <linearGradient id="skyDusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#402066"/><stop offset="1" stop-color="#a85a6e"/></linearGradient>
+      <linearGradient id="skySpace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0630"/><stop offset="1" stop-color="#1c1050"/></linearGradient>
+      <linearGradient id="snakeGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ff5f5f"/><stop offset=".25" stop-color="#ffb84d"/><stop offset=".5" stop-color="#ffe94d"/>
+        <stop offset=".7" stop-color="#6bdc6b"/><stop offset="1" stop-color="#5fa8ff"/>
+      </linearGradient>
+      ${fdefs}
+    </defs>
+    <g>${fonas}</g>
+    <g>${overlay}</g>
+    <g transform="translate(200,300)${wobble}" filter="url(#${style.filterId(u)})">${charInner}</g>
+    <g transform="translate(200,300)">${fx}</g>
+    <g>${frame}</g>
+    ${banner}
+  </svg>`;
+}
+
+/* ---------- STATE ---------- */
+const STATE = {
+  idx: 0,
+  points: 0,
+  museum: [],
+  r1: {kas:'gyvate', fonas:null, stilius:null, kadaro:null, sloganIdx:null, styleSwaps:0},
+  r2: {kas:null, fonas:null, stilius:null, kadaro:null, sloganIdx:null, claps:0},
+  r3: {kas:null, fonas:null, stilius:null, kadaro:null, sloganIdx:null, brief:null, matched:false, tries:0}
+};
+
+function addPoints(n){
+  STATE.points += n;
+  document.getElementById('ptsval').textContent = STATE.points;
+  const el = document.getElementById('points');
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+
+function confettiBurst(count){
+  const layer = document.getElementById('confetti');
+  const colors = ['#ff3ec9','#2fe6d1','#ffd23f','#8dff5c','#fff'];
+  for(let i=0;i<count;i++){
+    const c = document.createElement('div');
+    c.className='confetto';
+    c.style.left = (Math.random()*100)+'vw';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.transform = `rotate(${Math.random()*360}deg)`;
+    c.style.animation = `fall ${1.6+Math.random()*1.4}s ease-in forwards`;
+    layer.appendChild(c);
+    setTimeout(()=>c.remove(), 3200);
+  }
+}
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `@keyframes fall{to{transform:translateY(100vh) rotate(360deg); opacity:.2;}}`;
+document.head.appendChild(styleSheet);
+
+/* ---------- OPTION CARD RENDER HELPER ---------- */
+function optionCardsHTML(opts, selectedId, dataAttr){
+  return `<div class="row">${opts.map(o=>`
+    <button class="card ${o.id===selectedId?'sel':''}" data-${dataAttr}="${o.id}">
+      <span class="emoji">${o.emoji}</span><span class="label">${o.label}</span>
+    </button>`).join('')}</div>`;
+}
+
+/* ============================================================
+   SCREENS
+   ============================================================ */
+const SCREENS = [];
+
+/* --- 1: INTRO PANEL 1 --- */
+SCREENS.push({
+  id:'intro1', stop:true,
+  mscript:`Susirinkite prie ekrano. Pasakykite: „CogniTronas turi svarbų pranešimą visiems AInimalų kūrėjams!" Perskaitykite burbulą garsiai, teatrališkai.`,
+  render(root){
+    root.innerHTML = `
+      <h1 class="title">✨ CogniTrono pranešimas ✨</h1>
+      <div class="cognit">
+        <svg width="140" height="160" viewBox="0 0 140 160">
+          <ellipse cx="70" cy="150" rx="50" ry="8" fill="#2fe6d1" opacity=".25"/>
+          <polygon points="70,10 120,45 120,110 70,150 20,110 20,45" fill="#1a2a6b" stroke="#2fe6d1" stroke-width="3" opacity=".85"/>
+          <circle cx="70" cy="70" r="30" fill="#0af0d8" opacity=".85"/>
+          <circle cx="60" cy="64" r="6" fill="#0a1030"/><circle cx="80" cy="64" r="6" fill="#0a1030"/>
+          <path d="M 56,84 Q 70,96 84,84" stroke="#0a1030" stroke-width="3" fill="none"/>
+          <line x1="70" y1="10" x2="70" y2="150" stroke="#2fe6d1" stroke-width="1" opacity=".4"/>
+        </svg>
+        <div class="bubble">SVEIKI, AInimalų kūrėjai! Skelbiu KŪRYBOS RUNGTĮ!</div>
+      </div>
+      <p class="kidtext">CogniTronas kviečia visus!</p>`;
+  }
+});
+
+/* --- 2: INTRO PANEL 2 --- */
+SCREENS.push({
+  id:'intro2', stop:true,
+  mscript:`Paaiškinkite: kiekvienas AInimalas gali tapti reklamos žvaigžde! Reikia sukurti PLAKATĄ su savo AInimalu ir gėrimu „Žaibo Sultys". Laimėtojas gaus kūrybos ženkliuką.`,
+  render(root){
+    root.innerHTML = `
+      <h1 class="title">🏆 Užduotis: REKLAMOS PLAKATAS</h1>
+      <div class="layout2">
+        <div class="posterbox">${generatePosterSVG({kas:'bliksonas', fonas:'kosmosas', stilius:'neon', kadaro:'spindi', sloganIdx:2})}</div>
+        <div class="panel" style="max-width:420px;">
+          <p class="kidtext">Sukurk plakatą!</p>
+          <p class="kidtext">AInimalas + gėrimas + šūkis.</p>
+          <p class="kidtext">Geriausias — muziejuje!</p>
+        </div>
+      </div>`;
+  }
+});
+
+/* --- 3: INTRO PANEL 3 / prompt anatomy teaser --- */
+SCREENS.push({
+  id:'intro3', stop:true,
+  mscript:`Parodykite penkis stulpelius. Paaiškinkite: taip surenkame užklausą (promptą) DI — dalis po dalies, kaip iš LEGO kaladėlių.`,
+  render(root){
+    const parts = [
+      {icon:'🐾', label:'KAS', desc:'gyvūnas'},
+      {icon:'🎬', label:'KĄ DARO', desc:'veiksmas'},
+      {icon:'🎨', label:'STILIUS', desc:'kaip atrodo'},
+      {icon:'🏞️', label:'FONAS', desc:'kur vyksta'},
+      {icon:'📣', label:'ŠŪKIS', desc:'žodžiai'}
+    ];
+    root.innerHTML = `
+      <h1 class="title">🧩 Plakato dalys — kaip LEGO</h1>
+      <div class="row">
+        ${parts.map(p=>`<div class="panel" style="text-align:center; min-width:110px;">
+            <div style="font-size:clamp(24px,4vh,44px);">${p.icon}</div>
+            <div style="font-weight:900; color:var(--gold); font-size:var(--fs-btn);">${p.label}</div>
+            <div style="font-size:14px; color:var(--muted);">${p.desc}</div>
+          </div>`).join('<div style="align-self:center;font-size:28px;">+</div>')}
+      </div>
+      <p class="kidtext">Sudėk dalis — gauk plakatą!</p>`;
+  }
+});
+
+/* --- 4: ROUND 1 — TUTORIAL (fixed KAS=gyvate), demonstrates part-swap --- */
+function renderPosterPreview(container, parts){
+  const complete = parts.fonas && parts.stilius && parts.kadaro && parts.sloganIdx!==null;
+  container.innerHTML = complete
+    ? generatePosterSVG(parts)
+    : `<svg viewBox="0 0 400 520"><rect width="400" height="520" fill="#140a30"/>
+        <text x="200" y="260" text-anchor="middle" fill="#7a63c9" font-size="22" font-weight="900">?</text></svg>`;
+}
+
+const R1_STEPS = ['fonas','stilius','kadaro','slogan'];
+SCREENS.push({
+  id:'round1', stop:true,
+  mscript:`1 raundas: Majos Spektrinė Gyvatė. Renkitės FONĄ, tada STILIŲ (paprašykite pabandyti bent du stilius — parodykite, kaip keičiasi visas plakatas!), tada VEIKSMĄ, tada ŠŪKĮ.`,
+  state:{step:0},
+  render(root, screen){
+    const st = screen.state;
+    const r1 = STATE.r1;
+    const stepKey = R1_STEPS[st.step];
+    let optsHTML = '';
+    if(stepKey==='fonas') optsHTML = optionCardsHTML(FONAS_OPTS, r1.fonas, 'fonas');
+    if(stepKey==='stilius') optsHTML = optionCardsHTML(STILIUS_OPTS, r1.stilius, 'stilius');
+    if(stepKey==='kadaro') optsHTML = optionCardsHTML(KADARO_OPTS, r1.kadaro, 'kadaro');
+    if(stepKey==='slogan') optsHTML = `<div class="row">${SLOGAN_OPTS.map((s,i)=>`
+        <button class="card ${r1.sloganIdx===i?'sel':''}" data-slogan="${i}" style="min-width:180px;">
+          <span class="emoji">📣</span><span class="label" style="font-size:15px;">${s}</span>
+        </button>`).join('')}</div>`;
+
+    const stepLabel = {fonas:'1/4 — FONAS', stilius:'2/4 — STILIUS', kadaro:'3/4 — KĄ DARO', slogan:'4/4 — ŠŪKIS'}[stepKey];
+    const showSwapHint = stepKey==='stilius' && r1.stilius && r1.styleSwaps < 2;
+
+    root.innerHTML = `
+      <h1 class="title">🎨 1 raundas: Majos plakatas</h1>
+      <h2 class="sub">${stepLabel}</h2>
+      <div class="layout2">
+        <div class="posterbox" id="posterPreview"></div>
+        <div class="panel" style="max-width:480px;">${optsHTML}
+          ${showSwapHint ? `<div class="hint" style="margin-top:10px;">👉 Pabandyk KITĄ stilių — pažiūrėk, kas pasikeičia!</div>` : ''}
+        </div>
+      </div>`;
+    renderPosterPreview(document.getElementById('posterPreview'), {kas:'gyvate', fonas:r1.fonas||'kalnai', stilius:r1.stilius||'neon', kadaro:r1.kadaro||'geria', sloganIdx:r1.sloganIdx!==null?r1.sloganIdx:0});
+
+    root.querySelectorAll('[data-fonas]').forEach(b=>b.onclick=()=>{ r1.fonas=b.dataset.fonas; rerenderCurrent(); });
+    root.querySelectorAll('[data-stilius]').forEach(b=>b.onclick=()=>{
+      if(r1.stilius && r1.stilius!==b.dataset.stilius) r1.styleSwaps++;
+      r1.stilius=b.dataset.stilius; rerenderCurrent();
+    });
+    root.querySelectorAll('[data-kadaro]').forEach(b=>b.onclick=()=>{ r1.kadaro=b.dataset.kadaro; rerenderCurrent(); });
+    root.querySelectorAll('[data-slogan]').forEach(b=>b.onclick=()=>{ r1.sloganIdx=parseInt(b.dataset.slogan,10); rerenderCurrent(); });
+  },
+  canAdvance(screen){
+    // soft gate only within the round's own mini-steps (teacher can still use main Next to skip whole screen)
+    return true;
+  },
+  onLeaveForward(screen){
+    // called when teacher presses main NEXT while still inside step sequence — advance step first
+    const st = screen.state;
+    if(st.step < R1_STEPS.length-1 && !allR1Filled()){
+      st.step++;
+      return false; // stay on this screen, just advance internal step
+    }
+    if(allR1Filled() && !STATE.r1.added){
+      STATE.r1.added = true;
+      STATE.museum.push({title:'Majos plakatas', parts:{kas:'gyvate', fonas:STATE.r1.fonas, stilius:STATE.r1.stilius, kadaro:STATE.r1.kadaro, sloganIdx:STATE.r1.sloganIdx}});
+      addPoints(10);
+      confettiBurst(24);
+    }
+    return true; // proceed to next screen
+  }
+});
+function allR1Filled(){ const r=STATE.r1; return r.fonas && r.stilius && r.kadaro && r.sloganIdx!==null; }
+
+/* --- 5: ROUND 2 — free build + class vote/claps --- */
+const KAS_R2 = ['paukstis','bugas','bliksonas'];
+SCREENS.push({
+  id:'round2', stop:true,
+  mscript:`2 raundas: Neo kuria savo AInimalo plakatą. Paklauskite klasės balsu, kurį AInimalą rinktis, tada visos 5 dalys — bendru sutarimu. Baigę — visa klasė ploja plakatui!`,
+  render(root){
+    const r2 = STATE.r2;
+    if(!r2.kas) r2.kas = 'paukstis';
+    const complete = r2.fonas && r2.stilius && r2.kadaro && r2.sloganIdx!==null;
+    root.innerHTML = `
+      <h1 class="title">🚀 2 raundas: Neo plakatas</h1>
+      <div class="layout2">
+        <div class="posterbox" id="posterPreview2"></div>
+        <div class="panel" style="max-width:520px; max-height:56vh; overflow:auto;">
+          <h2 class="sub" style="margin-bottom:6px;">KAS?</h2>
+          ${optionCardsHTML(KAS_OPTS.filter(o=>KAS_R2.includes(o.id)), r2.kas, 'r2kas')}
+          <h2 class="sub" style="margin:10px 0 6px;">FONAS?</h2>
+          ${optionCardsHTML(FONAS_OPTS, r2.fonas, 'r2fonas')}
+          <h2 class="sub" style="margin:10px 0 6px;">STILIUS?</h2>
+          ${optionCardsHTML(STILIUS_OPTS, r2.stilius, 'r2stilius')}
+          <h2 class="sub" style="margin:10px 0 6px;">KĄ DARO?</h2>
+          ${optionCardsHTML(KADARO_OPTS, r2.kadaro, 'r2kadaro')}
+          <h2 class="sub" style="margin:10px 0 6px;">ŠŪKIS?</h2>
+          <div class="row">${SLOGAN_OPTS.map((s,i)=>`<button class="card ${r2.sloganIdx===i?'sel':''}" data-r2slogan="${i}" style="min-width:170px;"><span class="emoji">📣</span><span class="label" style="font-size:14px;">${s}</span></button>`).join('')}</div>
+          ${complete ? `<div style="text-align:center; margin-top:12px;"><button id="clapBtn" class="navbtn primary">👏 KLASĖ PLOJA (${r2.claps})</button></div>` : ''}
+        </div>
+      </div>`;
+    renderPosterPreview(document.getElementById('posterPreview2'), {kas:r2.kas, fonas:r2.fonas||'miestas', stilius:r2.stilius||'komiksas', kadaro:r2.kadaro||'soka', sloganIdx:r2.sloganIdx!==null?r2.sloganIdx:1});
+    root.querySelectorAll('[data-r2kas]').forEach(b=>b.onclick=()=>{ r2.kas=b.dataset.r2kas; rerenderCurrent(); });
+    root.querySelectorAll('[data-r2fonas]').forEach(b=>b.onclick=()=>{ r2.fonas=b.dataset.r2fonas; rerenderCurrent(); });
+    root.querySelectorAll('[data-r2stilius]').forEach(b=>b.onclick=()=>{ r2.stilius=b.dataset.r2stilius; rerenderCurrent(); });
+    root.querySelectorAll('[data-r2kadaro]').forEach(b=>b.onclick=()=>{ r2.kadaro=b.dataset.r2kadaro; rerenderCurrent(); });
+    root.querySelectorAll('[data-r2slogan]').forEach(b=>b.onclick=()=>{ r2.sloganIdx=parseInt(b.dataset.r2slogan,10); rerenderCurrent(); });
+    const clapBtn = document.getElementById('clapBtn');
+    if(clapBtn) clapBtn.onclick=()=>{ r2.claps++; confettiBurst(10); rerenderCurrent(); };
+  },
+  onLeaveForward(){
+    const r2 = STATE.r2;
+    const complete = r2.fonas && r2.stilius && r2.kadaro && r2.sloganIdx!==null;
+    if(complete && !r2.added){
+      r2.added = true;
+      STATE.museum.push({title:'Neo plakatas', parts:{kas:r2.kas, fonas:r2.fonas, stilius:r2.stilius, kadaro:r2.kadaro, sloganIdx:r2.sloganIdx}});
+      addPoints(10);
+      confettiBurst(24);
+    }
+    return true;
+  }
+});
+
+/* --- 6: ROUND 3 — themed challenge --- */
+const BRIEFS = [
+  {name:'ŽVAIGŽDŽIŲ VAKARĖLIS', need:{fonas:'kosmosas', stilius:'neon'}, hint:'Reikia KOSMOSO fono ir NEON stiliaus!'},
+  {name:'SENOVĖS RADIJO REKLAMA', need:{fonas:'miestas', stilius:'retro'}, hint:'Reikia MIESTO fono ir RETRO stiliaus!'},
+  {name:'HEROJŲ KOMIKSAS', need:{fonas:'kalnai', stilius:'komiksas'}, hint:'Reikia KALNŲ fono ir KOMIKSO stiliaus!'}
+];
+SCREENS.push({
+  id:'round3', stop:true,
+  mscript:`3 raundas: CogniTronas duoda temą! Klasė turi atspėti, kurį FONĄ ir STILIŲ pasirinkti, kad atitiktų. Jei nepavyksta — jokios bėdos, paaiškinkite užuominą ir bandykite dar kartą.`,
+  state:{},
+  render(root, screen){
+    const r3 = STATE.r3;
+    if(!r3.brief){ r3.brief = BRIEFS[Math.floor(Math.random()*BRIEFS.length)]; r3.kas='bugas'; r3.kadaro='spindi'; r3.sloganIdx=0; }
+    const complete = r3.fonas && r3.stilius;
+    root.innerHTML = `
+      <h1 class="title">🎯 3 raundas: CogniTrono tema</h1>
+      <div class="panel" style="text-align:center;"><h2 class="sub">TEMA: ${r3.brief.name}</h2></div>
+      <div class="layout2">
+        <div class="posterbox" id="posterPreview3"></div>
+        <div class="panel" style="max-width:460px;">
+          <h2 class="sub" style="margin-bottom:6px;">FONAS?</h2>
+          ${optionCardsHTML(FONAS_OPTS, r3.fonas, 'r3fonas')}
+          <h2 class="sub" style="margin:10px 0 6px;">STILIUS?</h2>
+          ${optionCardsHTML(STILIUS_OPTS, r3.stilius, 'r3stilius')}
+          <div style="text-align:center; margin-top:12px;">
+            ${complete ? `<button id="checkBtn" class="navbtn primary">✅ TIKRINTI</button>` : `<div class="hint">Pasirink FONĄ ir STILIŲ</div>`}
+          </div>
+          <div id="checkResult" style="margin-top:10px; text-align:center; font-weight:900; font-size:var(--fs-body);"></div>
+        </div>
+      </div>`;
+    renderPosterPreview(document.getElementById('posterPreview3'), {kas:r3.kas, fonas:r3.fonas||'kalnai', stilius:r3.stilius||'neon', kadaro:r3.kadaro, sloganIdx:r3.sloganIdx});
+    root.querySelectorAll('[data-r3fonas]').forEach(b=>b.onclick=()=>{ r3.fonas=b.dataset.r3fonas; rerenderCurrent(); });
+    root.querySelectorAll('[data-r3stilius]').forEach(b=>b.onclick=()=>{ r3.stilius=b.dataset.r3stilius; rerenderCurrent(); });
+    const checkBtn = document.getElementById('checkBtn');
+    if(checkBtn) checkBtn.onclick=()=>{
+      r3.tries++;
+      const ok = r3.fonas===r3.brief.need.fonas && r3.stilius===r3.brief.need.stilius;
+      const res = document.getElementById('checkResult');
+      if(ok){
+        r3.matched = true;
+        res.innerHTML = `<span style="color:var(--lime);">🎉 PUIKU! Atitiko temą!</span>`;
+        confettiBurst(30);
+        if(!r3.added){
+          r3.added = true;
+          const pts = r3.tries===1 ? 15 : 10;
+          addPoints(pts);
+          STATE.museum.push({title:'Klasės plakatas', parts:{kas:r3.kas, fonas:r3.fonas, stilius:r3.stilius, kadaro:r3.kadaro, sloganIdx:r3.sloganIdx}});
+        }
+      } else {
+        res.innerHTML = `<span style="color:var(--gold);">🤔 Beveik! ${r3.brief.hint}</span>`;
+      }
+    };
+  },
+  onLeaveForward(){
+    const r3 = STATE.r3;
+    if(!r3.added && r3.fonas && r3.stilius){
+      // teacher skipped without matching — still bank whatever was built so museum always gets 3 pieces
+      r3.added = true;
+      STATE.museum.push({title:'Klasės plakatas', parts:{kas:r3.kas||'bugas', fonas:r3.fonas, stilius:r3.stilius, kadaro:r3.kadaro||'spindi', sloganIdx:r3.sloganIdx!==null?r3.sloganIdx:0}});
+      addPoints(5);
+    }
+    return true;
+  }
+});
+
+/* --- 7: MUSEUM --- */
+SCREENS.push({
+  id:'museum', stop:true,
+  mscript:`Pereikite prie „muziejaus sienos". Paprašykite vaikų parodyti, kuris plakatas jiems labiausiai patinka — paspauskite ant jo, kad padidintumėte.`,
+  render(root){
+    while(STATE.museum.length < 3){
+      STATE.museum.push({title:'Plakatas', parts:{kas:'gyvate', fonas:'kalnai', stilius:'neon', kadaro:'geria', sloganIdx:0}});
+    }
+    root.innerHTML = `
+      <h1 class="title">🖼️ AInimalų muziejus</h1>
+      <p class="kidtext">Jūsų plakatai kabo sienoje!</p>
+      <div class="wall" id="wall">
+        ${STATE.museum.map((m,i)=>`
+          <div class="frameitem" data-i="${i}">
+            <div class="spot"></div>
+            ${generatePosterSVG(m.parts)}
+            <div class="plaque">${m.title}</div>
+          </div>`).join('')}
+      </div>`;
+    root.querySelectorAll('.frameitem').forEach(f=>f.onclick=()=>{
+      const i = parseInt(f.dataset.i,10);
+      const modal = document.getElementById('modal');
+      document.getElementById('modalcontent').innerHTML = `<div class="posterbox">${generatePosterSVG(STATE.museum[i].parts)}</div>`;
+      modal.classList.add('open');
+    });
+  }
+});
+
+/* --- 8: FINALE --- */
+SCREENS.push({
+  id:'finale', stop:true,
+  mscript:`Užbaikite garsiu pagyrimu klasei. Perskaitykite CogniTrono žodžius. Priminkite: kitą kartą — deepfake medžioklė!`,
+  render(root){
+    root.innerHTML = `
+      <h1 class="title">🏅 Kūrybos ženkliukas laimėtas!</h1>
+      <div class="layout2">
+        <svg class="medal" viewBox="0 0 200 220">
+          <polygon points="70,0 90,50 60,50" fill="#ff3ec9"/>
+          <polygon points="130,0 110,50 140,50" fill="#2fe6d1"/>
+          <circle cx="100" cy="130" r="70" fill="#ffd23f" stroke="#fff" stroke-width="6"/>
+          <circle cx="100" cy="130" r="52" fill="none" stroke="#fff8" stroke-width="3" stroke-dasharray="6 6"/>
+          <text x="100" y="145" text-anchor="middle" font-size="52" font-family="Trebuchet MS">🎨</text>
+        </svg>
+        <div class="panel" style="max-width:460px;">
+          <div class="bubble">Kūrybiškumas – galia viduje!</div>
+          <p class="kidtext" style="margin-top:14px;">Taškai: ${STATE.points} ⭐</p>
+          <p class="kidtext">Plakatai muziejuje: ${STATE.museum.length}</p>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:10px; text-align:center;">
+        <h2 class="sub">Kitas nuotykis:</h2>
+        <p class="kidtext">🔍 Tikra ar sukurta? Deepfake medžioklė</p>
+      </div>`;
+    confettiBurst(40);
+  }
+});
+
+/* ============================================================
+   ENGINE
+   ============================================================ */
+const stageEl = document.getElementById('stage');
+const dotsWrap = document.getElementById('progresswrap');
+const mnote = document.getElementById('mnote');
+const mtext = document.getElementById('mtext');
+
+function buildDots(){
+  dotsWrap.innerHTML = SCREENS.map((s,i)=>`<div class="pdot" data-i="${i}"></div>`).join('');
+}
+function updateDots(){
+  dotsWrap.querySelectorAll('.pdot').forEach((d,i)=>{
+    d.classList.toggle('done', i < STATE.idx);
+    d.classList.toggle('now', i === STATE.idx);
+  });
+}
+
+function render(){
+  const screen = SCREENS[STATE.idx];
+  if(!screen.state) screen.state = {};
+  stageEl.innerHTML = '';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'screen';
+  stageEl.appendChild(wrapper);
+  screen.render(wrapper, screen);
+  mtext.innerHTML = `<b>Sakykite:</b> ${screen.mscript}`;
+  updateDots();
+  document.getElementById('prevBtn').style.visibility = STATE.idx===0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').textContent = STATE.idx === SCREENS.length-1 ? '✓ PABAIGA' : 'TOLIAU →';
+}
+function rerenderCurrent(){
+  const screen = SCREENS[STATE.idx];
+  stageEl.innerHTML = '';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'screen';
+  stageEl.appendChild(wrapper);
+  screen.render(wrapper, screen);
+}
+
+function goNext(){
+  const screen = SCREENS[STATE.idx];
+  if(screen.onLeaveForward){
+    const proceed = screen.onLeaveForward(screen);
+    if(!proceed){ rerenderCurrent(); return; }
+  }
+  if(STATE.idx < SCREENS.length-1){ STATE.idx++; render(); }
+}
+function goPrev(){
+  if(STATE.idx > 0){ STATE.idx--; render(); }
+}
+function restart(){
+  if(!confirm('Pradėti pamoką iš naujo?')) return;
+  STATE.idx = 0; STATE.points = 0; STATE.museum = [];
+  STATE.r1 = {kas:'gyvate', fonas:null, stilius:null, kadaro:null, sloganIdx:null, styleSwaps:0};
+  STATE.r2 = {kas:null, fonas:null, stilius:null, kadaro:null, sloganIdx:null, claps:0};
+  STATE.r3 = {kas:null, fonas:null, stilius:null, kadaro:null, sloganIdx:null, brief:null, matched:false, tries:0};
+  SCREENS.forEach(s=>{ s.state = {}; });
+  document.getElementById('ptsval').textContent = '0';
+  render();
+}
+
+document.getElementById('nextBtn').onclick = goNext;
+document.getElementById('prevBtn').onclick = goPrev;
+document.getElementById('restartBtn').onclick = restart;
+document.getElementById('mtoggle').onclick = ()=> mnote.classList.toggle('open');
+document.getElementById('modalclose').onclick = ()=> document.getElementById('modal').classList.remove('open');
+document.getElementById('modal').addEventListener('click', (e)=>{ if(e.target.id==='modal') e.currentTarget.classList.remove('open'); });
+
+window.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight' || e.key==='ArrowDown') goNext();
+  else if(e.key==='ArrowLeft' || e.key==='ArrowUp') goPrev();
+  else if(e.key==='r' || e.key==='R') restart();
+});
+
+buildDots();
+render();
+
+})();
+</script>
+<!-- PA1-E12 v1 · Neuron 2026-08-14 -->
+</body>
+</html>
