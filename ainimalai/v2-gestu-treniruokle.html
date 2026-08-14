@@ -3,97 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AInimalų Laboratorija · v2.1</title>
+<title>AInimalų Laboratorija · v2.2</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#0a0e27;color:#fff;overflow:hidden}
-#hud{position:fixed;top:0;left:0;right:0;height:54px;display:flex;align-items:center;gap:12px;padding:0 14px;background:rgba(8,10,32,.92);border-bottom:2px solid #2a2f6a;z-index:50}
-#hud .code{font-weight:800;color:#7ee0ff;white-space:nowrap}
+#hud{position:fixed;top:0;left:0;right:0;height:54px;display:flex;align-items:center;gap:10px;padding:0 12px;background:rgba(8,10,32,.92);border-bottom:2px solid #2a2f6a;z-index:50}
+#hud .code{font-weight:800;color:#7ee0ff;white-space:nowrap;font-size:15px}
 #hud .spacer{flex:1}
-.badge{background:#171b4d;border:1px solid #3c418f;border-radius:10px;padding:4px 12px;font-size:14px;white-space:nowrap}
-#ptsBadge{background:#3a2f00;border-color:#ffd94a;color:#ffd94a;font-weight:900;font-size:17px}
+.badge{background:#171b4d;border:1px solid #3c418f;border-radius:10px;padding:4px 10px;font-size:13px;white-space:nowrap}
+#ptsBadge{background:#3a2f00;border-color:#ffd94a;color:#ffd94a;font-weight:900;font-size:16px}
+.hud-btn{background:#2a2f6a;color:#fff;font-size:15px;padding:6px 12px;border-radius:10px}
+.hud-btn.on{background:#41d67c;color:#06331a}
 #energyWrap{display:flex;align-items:center;gap:6px}
-#energyBar{width:110px;height:12px;background:#171b4d;border:1px solid #3c418f;border-radius:6px;overflow:hidden}
+#energyBar{width:96px;height:12px;background:#171b4d;border:1px solid #3c418f;border-radius:6px;overflow:hidden}
 #energyFill{height:100%;width:60%;background:linear-gradient(90deg,#41d67c,#ffd94a);transition:width .25s}
+#moodBadge{font-size:18px}
 #stage{position:absolute;inset:54px 0 0 0}
 #three-wrap{position:absolute;inset:0}
 canvas{display:block}
-.panel{position:absolute;background:rgba(13,16,48,.94);border:2px solid #3c418f;border-radius:18px;padding:16px;z-index:20}
+#drawCanvas{position:absolute;inset:0;z-index:15;pointer-events:none}
+.panel{position:absolute;background:rgba(13,16,48,.94);border:2px solid #3c418f;border-radius:18px;padding:14px;z-index:20}
 #introPanel{inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:none;border-radius:0;background:rgba(8,10,32,.97)}
-#introPanel h1{font-size:44px;margin:8px 0}
-#introPanel p{font-size:21px;line-height:1.4;max-width:780px;color:#cfd6ff}
+#introPanel h1{font-size:42px;margin:8px 0}
+#introPanel p{font-size:20px;line-height:1.4;max-width:780px;color:#cfd6ff}
 button{font-family:inherit;cursor:pointer;border:none;border-radius:14px;font-weight:800}
-.big-btn{font-size:24px;padding:16px 34px;background:#7ee0ff;color:#08122a;margin-top:18px}
-#camPanel{left:12px;bottom:12px;width:280px;padding:10px}
-#camBox{position:relative}
-#cam{width:100%;border-radius:10px;transform:scaleX(-1);background:#000;display:block}
+.big-btn{font-size:23px;padding:15px 32px;background:#7ee0ff;color:#08122a;margin-top:16px}
+#camPanel{left:12px;bottom:12px;width:260px;padding:8px}
+#camBox{position:relative;overflow:hidden;border-radius:10px}
+#cam{width:100%;transform:scaleX(-1);background:#000;display:block;filter:blur(14px) brightness(.8);transition:filter .3s}
+#cam.clear{filter:none}
 #lmCanvas{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);pointer-events:none}
-#handInfo{font-size:14px;color:#9aa3e8;margin-top:6px;min-height:18px}
-#fingerBig{position:absolute;top:-14px;right:-8px;background:#ffd94a;color:#101336;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;box-shadow:0 4px 16px rgba(0,0,0,.5);z-index:2}
-/* mode tabs */
-#modeTabs{position:absolute;top:66px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:25}
-.mode-tab{font-size:17px;padding:10px 18px;border-radius:12px;background:rgba(23,27,77,.95);color:#fff;border:2px solid #3c418f}
+#privLabel{font-size:11px;color:#41d67c;margin-top:4px;text-align:center}
+#handInfo{font-size:13px;color:#9aa3e8;margin-top:3px;min-height:17px}
+#fingerBig{position:absolute;top:-12px;right:-6px;background:#ffd94a;color:#101336;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;box-shadow:0 4px 16px rgba(0,0,0,.5);z-index:2}
+#privBtn{position:absolute;top:4px;left:4px;z-index:3;font-size:13px;padding:3px 8px;background:rgba(23,27,77,.9);color:#fff;border-radius:8px}
+#modeTabs{position:absolute;top:64px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:25;flex-wrap:wrap;justify-content:center;max-width:92%}
+.mode-tab{font-size:15px;padding:9px 14px;border-radius:12px;background:rgba(23,27,77,.95);color:#fff;border:2px solid #3c418f}
 .mode-tab.on{background:#7ee0ff;color:#08122a;border-color:#7ee0ff}
 .mode-tab.locked{opacity:.45}
-.mode-tab .lock{font-size:13px}
-#rightPanel{right:12px;top:112px;width:330px;max-height:calc(100% - 150px);overflow:auto}
-#rightPanel h3{font-size:18px;margin-bottom:8px;color:#7ee0ff}
-.gest-row{display:flex;align-items:center;gap:8px;background:#171b4d;border:2px solid #3c418f;border-radius:12px;padding:7px 9px;margin-bottom:7px}
+#rightPanel{right:12px;top:118px;width:320px;max-height:calc(100% - 156px);overflow:auto}
+#rightPanel h3{font-size:17px;margin-bottom:8px;color:#7ee0ff}
+.gest-row{display:flex;align-items:center;gap:7px;background:#171b4d;border:2px solid #3c418f;border-radius:12px;padding:6px 8px;margin-bottom:6px}
 .gest-row.locked{opacity:.4}
-.gest-row .em{font-size:24px}
-.gest-row .nm{flex:1;font-size:15px;font-weight:800}
-.gest-row .cnt{font-size:12px;color:#9aa3e8;min-width:56px}
-.gest-row button{font-size:13px;padding:7px 11px;background:#41d67c;color:#06331a}
+.gest-row .em{font-size:22px}
+.gest-row .nm{flex:1;font-size:14px;font-weight:800}
+.gest-row .cnt{font-size:11px;color:#9aa3e8;min-width:50px}
+.gest-row button{font-size:12px;padding:6px 10px;background:#41d67c;color:#06331a}
 .gest-row button.rec{background:#ff5470;color:#fff;animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.55}}
 .gest-row.active-pred{border-color:#ffd94a;box-shadow:0 0 14px rgba(255,217,74,.35)}
-#confBar{height:7px;background:#171b4d;border-radius:4px;overflow:hidden;margin-top:2px}
+#confBar{height:6px;background:#171b4d;border-radius:4px;overflow:hidden;margin-top:2px}
 #confFill{height:100%;width:0%;background:#ffd94a;transition:width .2s}
-.mode-help{font-size:15px;color:#cfd6ff;line-height:1.45;background:#171b4d;border-radius:10px;padding:10px 12px}
+.mode-help{font-size:14px;color:#cfd6ff;line-height:1.42;background:#171b4d;border-radius:10px;padding:9px 11px;margin-bottom:6px}
 .mode-help b{color:#7ee0ff}
-/* progress / unlock */
-#progressPanel{left:12px;top:66px;width:250px;padding:12px}
-#progressPanel h3{font-size:16px;color:#ffd94a;margin-bottom:6px}
-.unlock-row{display:flex;gap:8px;align-items:center;font-size:14px;margin-bottom:5px;color:#9aa3e8}
+.spell-card{display:flex;align-items:center;gap:10px;background:#171b4d;border:2px solid #3c418f;border-radius:12px;padding:6px 10px;margin-bottom:6px;font-size:14px;font-weight:800}
+.spell-card svg{flex:0 0 44px}
+#progressPanel{left:12px;top:64px;width:236px;padding:11px}
+#progressPanel h3{font-size:15px;color:#ffd94a;margin-bottom:5px}
+.unlock-row{display:flex;gap:6px;align-items:center;font-size:12.5px;margin-bottom:4px;color:#9aa3e8}
 .unlock-row.done{color:#41d67c}
 .unlock-row.next{color:#ffd94a;font-weight:800}
-#progBarWrap{height:10px;background:#171b4d;border-radius:5px;overflow:hidden;margin:8px 0}
+#progBarWrap{height:9px;background:#171b4d;border-radius:5px;overflow:hidden;margin:7px 0}
 #progBarFill{height:100%;width:0%;background:linear-gradient(90deg,#7ee0ff,#ffd94a);transition:width .5s}
-#statusMsg{position:absolute;top:112px;left:50%;transform:translateX(-50%);background:rgba(13,16,48,.95);border:2px solid #ffd94a;border-radius:14px;padding:10px 22px;font-size:19px;font-weight:800;z-index:40;text-align:center;max-width:76%}
-#trickName{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:32px;font-weight:900;color:#ffd94a;text-shadow:0 2px 12px rgba(0,0,0,.7);z-index:30;opacity:0;transition:opacity .3s}
-.float-pts{position:absolute;font-size:26px;font-weight:900;color:#ffd94a;z-index:45;pointer-events:none;animation:floatUp 1.4s forwards;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+#statusMsg{position:absolute;top:112px;left:50%;transform:translateX(-50%);background:rgba(13,16,48,.95);border:2px solid #ffd94a;border-radius:14px;padding:9px 20px;font-size:18px;font-weight:800;z-index:40;text-align:center;max-width:74%}
+#trickName{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:30px;font-weight:900;color:#ffd94a;text-shadow:0 2px 12px rgba(0,0,0,.7);z-index:30;opacity:0;transition:opacity .3s}
+.float-pts{position:absolute;font-size:24px;font-weight:900;color:#ffd94a;z-index:45;pointer-events:none;animation:floatUp 1.4s forwards;text-shadow:0 2px 8px rgba(0,0,0,.6)}
 @keyframes floatUp{to{transform:translateY(-90px);opacity:0}}
-#mbtn{position:fixed;right:12px;bottom:12px;width:46px;height:46px;border-radius:50%;background:#ffd94a;color:#101336;font-size:22px;z-index:60}
-#mpanel{position:fixed;right:12px;bottom:68px;width:380px;max-height:52vh;overflow:auto;background:#fffbe8;color:#222;border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.45;display:none;z-index:60}
+#mbtn{position:fixed;right:12px;bottom:12px;width:44px;height:44px;border-radius:50%;background:#ffd94a;color:#101336;font-size:21px;z-index:60}
+#mpanel{position:fixed;right:12px;bottom:64px;width:380px;max-height:52vh;overflow:auto;background:#fffbe8;color:#222;border-radius:14px;padding:13px 15px;font-size:14px;line-height:1.42;display:none;z-index:60}
 #mpanel.on{display:block}
 #mpanel b{color:#8a5a00}
-#eduTip{position:absolute;bottom:16px;left:12px;right:auto;width:280px;background:rgba(23,27,77,.92);border:1px dashed #7ee0ff;border-radius:12px;padding:10px 12px;font-size:13px;color:#cfd6ff;z-index:20;line-height:1.4;display:none}
+#eduTip{position:absolute;bottom:14px;left:12px;width:260px;background:rgba(23,27,77,.92);border:1px dashed #7ee0ff;border-radius:12px;padding:9px 11px;font-size:12.5px;color:#cfd6ff;z-index:20;line-height:1.4;display:none}
 #eduTip b{color:#7ee0ff}
 .hidden{display:none!important}
 #loaderNote{font-size:16px;color:#9aa3e8;margin-top:10px}
-/* artifact overlay */
-#artifactOverlay{position:fixed;inset:0;background:rgba(8,10,32,.96);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-#artifactOverlay.on{display:flex}
-#artifactOverlay .glasses{font-size:120px;animation:pop .7s}
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(8,10,32,.96);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+.overlay.on{display:flex}
+.overlay h2{font-size:38px;color:#ffd94a;margin:10px 0}
+.overlay p{font-size:20px;max-width:640px;color:#cfd6ff;line-height:1.4}
+.glasses{font-size:110px;animation:pop .7s}
 @keyframes pop{0%{transform:scale(0) rotate(-30deg)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
-#artifactOverlay h2{font-size:42px;color:#ffd94a;margin:10px 0}
-#artifactOverlay p{font-size:22px;max-width:640px;color:#cfd6ff;line-height:1.4}
+#breathCircle{width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,#7ee0ff55,#7ee0ff11);border:3px solid #7ee0ff;margin:18px 0;animation:breath 8s ease-in-out infinite}
+@keyframes breath{0%,100%{transform:scale(.6)}50%{transform:scale(1.25)}}
+.food-row{display:flex;gap:18px;margin-top:18px}
+.food-btn{font-size:44px;padding:16px 22px;background:#171b4d;border:3px solid #3c418f;border-radius:18px}
+.food-btn:hover{border-color:#7ee0ff}
+/* runner HUD */
+#runHud{position:absolute;top:64px;left:12px;width:236px;padding:11px;z-index:22}
+#runHud h3{font-size:15px;color:#7ee0ff;margin-bottom:5px}
+#runHud .r{font-size:14px;margin-bottom:3px}
+#lvlBarWrap{height:10px;background:#171b4d;border-radius:5px;overflow:hidden;margin-top:5px}
+#lvlBarFill{height:100%;width:0%;background:#41d67c;transition:width .3s}
+#spinAlert{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);font-size:52px;font-weight:900;color:#ff5470;z-index:35;display:none;animation:pulse .5s infinite;text-shadow:0 3px 16px rgba(0,0,0,.8)}
+#mathTask{position:absolute;top:118px;left:50%;transform:translateX(-50%);background:rgba(13,16,48,.96);border:3px solid #7ee0ff;border-radius:16px;padding:12px 30px;font-size:38px;font-weight:900;z-index:30;display:none}
 </style>
 </head>
 <body>
 
 <div id="hud">
-  <span class="code">🧪 AInimalų Laboratorija · v2.1</span>
-  <span class="badge" id="modelState">🧠 Modelis: tuščias</span>
+  <span class="code">🧪 AInimalų Lab v2.2</span>
+  <span class="badge" id="modelState">🧠 tuščias</span>
   <span class="spacer"></span>
+  <button class="hud-btn" id="sndBtn" title="Garsai">🔇</button>
+  <button class="hud-btn" id="resetBtn" title="Iš naujo">↻</button>
+  <span class="badge" id="moodBadge" title="Nuotaika">😐</span>
   <span id="energyWrap" class="badge">⚡<div id="energyBar"><div id="energyFill"></div></div></span>
   <span class="badge" id="ptsBadge">⭐ 0</span>
 </div>
 
 <div id="stage">
   <div id="three-wrap"></div>
-
+  <canvas id="drawCanvas"></canvas>
   <div id="modeTabs" class="hidden"></div>
 
   <div id="progressPanel" class="panel hidden">
@@ -102,24 +124,33 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:14px;font-we
     <div id="unlockList"></div>
   </div>
 
+  <div id="runHud" class="panel hidden">
+    <h3>🏃 Bėgimas</h3>
+    <div class="r" id="runLvl">Lygis 1</div>
+    <div class="r" id="runLives">❤️❤️❤️</div>
+    <div class="r" id="runTime">⏱ 0 s</div>
+    <div id="lvlBarWrap"><div id="lvlBarFill"></div></div>
+  </div>
+
   <div id="introPanel" class="panel">
-    <div style="font-size:76px">🧪🐍</div>
+    <div style="font-size:70px">🧪🐍</div>
     <h1>AInimalų Laboratorija</h1>
     <p><b>Spektrinė Gyvatė laukia treniruotės.</b><br>
-    Mokyk ją gestais, valdyk delnu kaip DRONĄ, keisk dydį rankomis —<br>
-    ir rink taškus, kol atrakinsi <b>slaptą artefaktą</b>.<br>
-    <span style="color:#7ee0ff">Tu mokai kompiuterį matyti. Taip pat valdomi tikri dronai!</span></p>
+    Mokyk gestais · valdyk kaip droną · piešk burtus ore · bėk kliūčių trasa.<br>
+    <span style="color:#7ee0ff">Tu mokai kompiuterį matyti — taip valdomi tikri dronai ir robotai.</span></p>
     <button class="big-btn" id="startBtn">📷 Įjungti kamerą ir pradėti</button>
     <div id="loaderNote"></div>
-    <p style="font-size:14px;margin-top:12px;color:#5a63a8">Vaizdas apdorojamas TIK šiame kompiuteryje — niekur nesiunčiamas.</p>
+    <p style="font-size:14px;margin-top:12px;color:#41d67c">🔒 Niekas neįrašoma ir nesiunčiama — kompiuteris seka tik TAŠKUS. Vaizdas ekrane specialiai išblurintas.</p>
   </div>
 
   <div id="camPanel" class="panel hidden">
     <div id="camBox">
       <video id="cam" autoplay playsinline muted></video>
       <canvas id="lmCanvas"></canvas>
+      <button id="privBtn">🫥 blur</button>
       <div id="fingerBig">–</div>
     </div>
+    <div id="privLabel">🔒 Neįrašoma — sekami tik taškai</div>
     <div id="handInfo">Ranka nematoma…</div>
   </div>
 
@@ -132,27 +163,44 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:14px;font-we
   <div id="eduTip"></div>
   <div id="statusMsg" class="hidden"></div>
   <div id="trickName"></div>
+  <div id="spinAlert">🌀 SUKTUKAS! (3 pirštai)</div>
+  <div id="mathTask"></div>
 </div>
 
-<div id="artifactOverlay">
+<div class="overlay" id="artifactOverlay">
   <div class="glasses">🕶️</div>
   <h2>GODMODELINK AKINIAI!</h2>
-  <p>Tu įrodei, kad moki <b>treniruoti dirbtinį intelektą</b>:<br>
-  mokei jį pavyzdžiais, valdei delnu kaip droną, supratai, kaip jis mato.<br><br>
-  <b>Tai ta pati technologija</b>, kuria šiandien valdomi DJI dronai ir rytojaus robotai.<br>
-  O svarbiausia — treniruodamas AI, treniravai SAVO smegenis. 🧠</p>
-  <button class="big-btn" onclick="document.getElementById('artifactOverlay').classList.remove('on')">Tęsti laboratorijoje ▶</button>
+  <p>Tu moki <b>treniruoti dirbtinį intelektą</b> — pavyzdžiais, gestais, piešiniu ore.<br>
+  Ta pati technologija valdo DJI dronus ir rytojaus robotus.<br>
+  Treniruodamas AI — treniravai SAVO smegenis. 🧠</p>
+  <button class="big-btn" onclick="document.getElementById('artifactOverlay').classList.remove('on')">Tęsti ▶</button>
+</div>
+
+<div class="overlay" id="breathOverlay">
+  <h2>Viskas gerai. 💙</h2>
+  <p>Klaidos = mokymasis. Padarykim pertraukėlę:<br><b>Įkvėpk, kai ratas auga… iškvėpk, kai mažėja.</b></p>
+  <div id="breathCircle"></div>
+  <p id="breathCount" style="font-size:26px;font-weight:900;color:#7ee0ff">2 kvėpavimai…</p>
+</div>
+
+<div class="overlay" id="feedOverlay">
+  <h2>🥱 Gyvatė pavargo!</h2>
+  <p>Energija baigėsi. <b>Kuo pamaitinsi?</b><br>Pagalvok: kas duoda TIKROS energijos?</p>
+  <div class="food-row">
+    <button class="food-btn" data-food="healthy">🍎</button>
+    <button class="food-btn" data-food="healthy">🥕</button>
+    <button class="food-btn" data-food="junk">🍭</button>
+    <button class="food-btn" data-food="junk">🍟</button>
+  </div>
+  <p id="foodMsg" style="margin-top:14px;font-size:18px"></p>
 </div>
 
 <button id="mbtn" title="Mentoriaus užrašai">M</button>
 <div id="mpanel">
   <b>Mentoriui — edukacinė pusė:</b><br>
-  🎓 <b>Triukai</b> = mašininis mokymasis: modelis mokosi TIK iš vaiko pavyzdžių. Klaidos — auksas: „kodėl suklydo?" (per mažai pavyzdžių / panašūs gestai).<br>
-  📏 <b>Dydis</b> = kompiuterinė regos geometrija: kompiuteris matuoja ATSTUMĄ tarp delnų iš 21 taško kiekvienoje rankoje.<br>
-  🚁 <b>Dronas</b> = delnas kaip kursorius — LYGIAI TAIP valdomi tikri dronai (DJI Neo gestų valdymas!) ir ateities robotai.<br>
-  ⚡ <b>Energija</b> = delno pasukimas: kompiuteris skaičiuoja delno KRYPTĮ 3D erdvėje.<br>
-  Skeletas ant vaizdo = „ką mato kompiuteris": ne veidą, ne vaiką — tik 21 tašką. Puiki privatumo pamoka.<br><br>
-  <b>Eiga klasei:</b> vaikai eina po vieną / poromis prie kameros, klasė sako, kokį gestą rodyti. Taškai bendri — klasės kelias iki artefakto.
+  🎓 Triukai = ML iš pavyzdžių · 📏 Dydis = atstumo geometrija · 🚁 Dronas = reali DJI gestų sąsaja · ⚡ Energija = 3D delno kryptis + kumščio suspaudimas · ✍️ Piešimas = simbolių atpažinimas (burtai △⭕⚡ + matematika: nupiešk atsakymą 1/2/3) · 🏃 Bėgimas = dėmesio treniruotė; po 3 klaidų iš eilės — KVĖPAVIMO pauzė (frustracijos valdymas!) · 🍎 Maitinimas = sveiko maisto pamoka.<br>
+  🔒 Blur + skeletas = privatumo pamoka: kompiuteris mato taškus, ne vaiką.<br>
+  🌀 3 pirštai bet kada = suktukas · 🤏 visų pirštų galiukai kartu = UGNIS!
 </div>
 
 <script type="importmap">
@@ -162,435 +210,811 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:14px;font-we
 import * as THREE from 'three';
 import {HandLandmarker, FilesetResolver} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs';
 
-/* ================= LAB ENVIRONMENT ================= */
+/* ================= SFX (synth, opt-in) ================= */
+let sndOn = false, actx = null;
+function sfx(kind){
+  if(!sndOn) return;
+  actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+  const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+  o.connect(g); g.connect(actx.destination);
+  const P = {
+    blip:   [880, 'square', .06, .12],
+    chime:  [1320,'sine',   .25, .18],
+    whoosh: [220, 'sawtooth',.2, .15],
+    fail:   [160, 'triangle',.25,.2],
+    fanfare:[660, 'square', .4, .2],
+    fire:   [90,  'sawtooth',.35,.25]
+  }[kind]||[440,'sine',.1,.1];
+  o.type = P[1]; o.frequency.setValueAtTime(P[0], t);
+  if(kind==='chime'||kind==='fanfare') o.frequency.exponentialRampToValueAtTime(P[0]*1.5, t+P[2]);
+  if(kind==='whoosh'||kind==='fire') o.frequency.exponentialRampToValueAtTime(P[0]*.4, t+P[2]);
+  g.gain.setValueAtTime(P[3], t); g.gain.exponentialRampToValueAtTime(.001, t+P[2]);
+  o.start(t); o.stop(t+P[2]+.02);
+  if(kind==='fanfare'){ [1.25,1.5].forEach((m,i)=>{ const o2=actx.createOscillator(),g2=actx.createGain(); o2.connect(g2);g2.connect(actx.destination); o2.type='square'; o2.frequency.value=660*m; g2.gain.setValueAtTime(.15,t+.12*(i+1)); g2.gain.exponentialRampToValueAtTime(.001,t+.12*(i+1)+.3); o2.start(t+.12*(i+1)); o2.stop(t+.12*(i+1)+.32); }); }
+}
+document.getElementById('sndBtn').onclick = function(){ sndOn=!sndOn; this.textContent=sndOn?'🔊':'🔇'; this.classList.toggle('on',sndOn); if(sndOn) sfx('chime'); };
+
+/* ================= LAB SCENE ================= */
 const wrap = document.getElementById('three-wrap');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xe8eef7);
-scene.fog = new THREE.Fog(0xe8eef7, 16, 34);
+scene.fog = new THREE.Fog(0xe8eef7, 16, 36);
 const camera3 = new THREE.PerspectiveCamera(50, wrap.clientWidth/wrap.clientHeight, .1, 100);
 camera3.position.set(0, 2.8, 9); camera3.lookAt(0, 1.4, 0);
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(wrap.clientWidth, wrap.clientHeight);
 wrap.appendChild(renderer.domElement);
-
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8899bb, 1.5));
 const key = new THREE.DirectionalLight(0xffffff, 1.8); key.position.set(5,8,6); scene.add(key);
-const cyan = new THREE.PointLight(0x35c8ff, 3, 24); cyan.position.set(-6,3,-3); scene.add(cyan);
-const mag = new THREE.PointLight(0xb26bff, 2.5, 24); mag.position.set(6,3,-4); scene.add(mag);
-
-/* floor: glossy white with grid */
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(50,50),
-  new THREE.MeshStandardMaterial({color:0xf2f6fc, roughness:.25, metalness:.1}));
+const cyanL = new THREE.PointLight(0x35c8ff, 3, 24); cyanL.position.set(-6,3,-3); scene.add(cyanL);
+const magL = new THREE.PointLight(0xb26bff, 2.5, 24); magL.position.set(6,3,-4); scene.add(magL);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshStandardMaterial({color:0xf2f6fc, roughness:.25, metalness:.1}));
 floor.rotation.x = -Math.PI/2; scene.add(floor);
-const grid = new THREE.GridHelper(50, 50, 0x9fc4ff, 0xd5e2f5);
-grid.position.y = .01; scene.add(grid);
-
-/* white ceiling with glowing light panels */
-const ceil = new THREE.Mesh(new THREE.PlaneGeometry(50,50),
-  new THREE.MeshStandardMaterial({color:0xffffff, roughness:.9}));
+const grid = new THREE.GridHelper(60, 60, 0x9fc4ff, 0xd5e2f5); grid.position.y=.01; scene.add(grid);
+const ceil = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshStandardMaterial({color:0xffffff, roughness:.9}));
 ceil.rotation.x = Math.PI/2; ceil.position.y = 7; scene.add(ceil);
-for(let px=-2; px<=2; px+=2) for(let pz=-1; pz<=1; pz+=1){
-  const lp = new THREE.Mesh(new THREE.BoxGeometry(2.4,.08,1.2),
-    new THREE.MeshStandardMaterial({color:0xffffff, emissive:0xf4faff, emissiveIntensity:1.4}));
+for(let px=-2;px<=2;px+=2) for(let pz=-1;pz<=1;pz+=1){
+  const lp = new THREE.Mesh(new THREE.BoxGeometry(2.4,.08,1.2), new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xf4faff,emissiveIntensity:1.4}));
   lp.position.set(px*3.2, 6.96, pz*4-3); scene.add(lp);
 }
-/* back wall */
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(50,8),
-  new THREE.MeshStandardMaterial({color:0xdde7f5, roughness:.85}));
+const wall = new THREE.Mesh(new THREE.PlaneGeometry(60,8), new THREE.MeshStandardMaterial({color:0xdde7f5, roughness:.85}));
 wall.position.set(0,3.5,-12); scene.add(wall);
-/* neon strips on wall */
-[[0x35c8ff,-11.9,1.2],[0xb26bff,-11.85,2.0]].forEach(([c,z,y])=>{
-  const strip = new THREE.Mesh(new THREE.BoxGeometry(30,.09,.05),
-    new THREE.MeshStandardMaterial({color:c, emissive:c, emissiveIntensity:2}));
-  strip.position.set(0,y,z); scene.add(strip);
+[[0x35c8ff,1.0],[0xb26bff,1.7]].forEach(([c,y])=>{
+  const s = new THREE.Mesh(new THREE.BoxGeometry(34,.09,.05), new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:2}));
+  s.position.set(0,y,-11.9); scene.add(s);
 });
-/* glass specimen tubes with glowing cores */
-function tube(x,z,coreColor){
+/* RA sign — canvas texture */
+(function(){
+  const c = document.createElement('canvas'); c.width=1024; c.height=200;
+  const x = c.getContext('2d');
+  x.fillStyle='rgba(0,0,0,0)'; x.fillRect(0,0,1024,200);
+  x.font='900 92px Arial'; x.textAlign='center'; x.textBaseline='middle';
+  x.fillStyle='#0f2a66'; x.fillText('ROBOTIKOS AKADEMIJA', 512, 78);
+  x.font='700 46px Arial'; x.fillStyle='#35c8ff'; x.fillText('· AInimalų LABORATORIJA ·', 512, 156);
+  const tex = new THREE.CanvasTexture(c);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(11,2.15), new THREE.MeshBasicMaterial({map:tex, transparent:true}));
+  sign.position.set(0,4.6,-11.8); scene.add(sign);
+})();
+/* specimen tubes with MINI ANIMALS: Garsinis Paukštis, Bugas, Bliksonas */
+function makeTube(x,z){
   const g = new THREE.Group();
-  const glass = new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,4,20,1,true),
-    new THREE.MeshPhysicalMaterial({color:0xcfe6ff, transparent:true, opacity:.22, roughness:.05, side:THREE.DoubleSide}));
-  glass.position.y = 2;
-  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(.4,1),
-    new THREE.MeshStandardMaterial({color:coreColor, emissive:coreColor, emissiveIntensity:1.6}));
-  core.position.y = 2; core.userData.spin = true;
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(1,1.15,.4,20),
-    new THREE.MeshStandardMaterial({color:0xb9c8de, roughness:.4, metalness:.5}));
-  base.position.y = .2;
-  g.add(glass); g.add(core); g.add(base); g.position.set(x,0,z);
-  g.userData.core = core; scene.add(g); return g;
+  const glass = new THREE.Mesh(new THREE.CylinderGeometry(.85,.85,4,20,1,true),
+    new THREE.MeshPhysicalMaterial({color:0xcfe6ff,transparent:true,opacity:.22,roughness:.05,side:THREE.DoubleSide}));
+  glass.position.y=2;
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.2,.4,20), new THREE.MeshStandardMaterial({color:0xb9c8de,roughness:.4,metalness:.5}));
+  base.position.y=.2;
+  g.add(glass); g.add(base); g.position.set(x,0,z); scene.add(g); return g;
 }
-const tubes = [tube(-6.5,-7,0x35c8ff), tube(6.5,-7,0xb26bff), tube(-9,-4,0x41d67c)];
-/* pedestal under snake */
-const ped = new THREE.Mesh(new THREE.CylinderGeometry(3.4,3.7,.25,48),
-  new THREE.MeshStandardMaterial({color:0xcdd9ec, roughness:.3, metalness:.4}));
-ped.position.y = .12; scene.add(ped);
-const holo = new THREE.Mesh(new THREE.RingGeometry(3.5,3.75,64),
-  new THREE.MeshBasicMaterial({color:0x35c8ff, transparent:true, opacity:.5, side:THREE.DoubleSide}));
-holo.rotation.x = -Math.PI/2; holo.position.y = .28; scene.add(holo);
+function miniBird(){ /* Garsinis Paukštis — violetinis */
+  const b = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.34,14,12), new THREE.MeshStandardMaterial({color:0x7c5cff,emissive:0x2a1a66,emissiveIntensity:.4}));
+  const headM = new THREE.Mesh(new THREE.SphereGeometry(.22,12,10), new THREE.MeshStandardMaterial({color:0x8f75ff}));
+  headM.position.set(0,.36,.1);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(.07,.2,8), new THREE.MeshStandardMaterial({color:0xffc44a}));
+  beak.rotation.x=Math.PI/2; beak.position.set(0,.36,.34);
+  const w1=new THREE.Mesh(new THREE.ConeGeometry(.18,.5,6),new THREE.MeshStandardMaterial({color:0x5c3fe0}));
+  w1.rotation.z=Math.PI/2.3; w1.position.set(-.36,.05,0);
+  const w2=w1.clone(); w2.rotation.z=-Math.PI/2.3; w2.position.x=.36;
+  b.add(body);b.add(headM);b.add(beak);b.add(w1);b.add(w2); return b;
+}
+function miniBug(){ /* Bugas — žalias vabalas */
+  const b = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.32,14,12), new THREE.MeshStandardMaterial({color:0x41d67c,emissive:0x0a3d1f,emissiveIntensity:.4}));
+  body.scale.set(1,.8,1.25);
+  const headM = new THREE.Mesh(new THREE.SphereGeometry(.18,12,10), new THREE.MeshStandardMaterial({color:0x2ea55e}));
+  headM.position.set(0,.06,.4);
+  [[-.12],[.12]].forEach(([x])=>{const a=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.3),new THREE.MeshStandardMaterial({color:0x222}));a.position.set(x,.28,.48);a.rotation.x=-.5;b.add(a);});
+  b.add(body);b.add(headM); return b;
+}
+function miniDog(){ /* Bliksonas — elektrinis šuo, geltonas */
+  const b = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(.5,.32,.7), new THREE.MeshStandardMaterial({color:0xffd94a,emissive:0x664c00,emissiveIntensity:.35}));
+  const headM = new THREE.Mesh(new THREE.BoxGeometry(.3,.28,.3), new THREE.MeshStandardMaterial({color:0xffe27a}));
+  headM.position.set(0,.28,.42);
+  [[-.1],[.1]].forEach(([x])=>{const e=new THREE.Mesh(new THREE.ConeGeometry(.07,.18,4),new THREE.MeshStandardMaterial({color:0xffb02e}));e.position.set(x,.5,.38);b.add(e);});
+  const tail=new THREE.Mesh(new THREE.ConeGeometry(.05,.3,6),new THREE.MeshStandardMaterial({color:0xffb02e}));
+  tail.position.set(0,.25,-.42); tail.rotation.x=-.9; b.add(tail);
+  b.add(body);b.add(headM); return b;
+}
+const tubeAnimals = [];
+[[ -6.5,-7, miniBird()], [6.5,-7, miniBug()], [-9,-4, miniDog()]].forEach(([x,z,animal])=>{
+  makeTube(x,z); animal.position.set(x,1.6,z); animal.userData.baseY=1.6; scene.add(animal); tubeAnimals.push(animal);
+});
+const ped = new THREE.Mesh(new THREE.CylinderGeometry(3.4,3.7,.25,48), new THREE.MeshStandardMaterial({color:0xcdd9ec,roughness:.3,metalness:.4}));
+ped.position.y=.12; scene.add(ped);
+const holo = new THREE.Mesh(new THREE.RingGeometry(3.5,3.75,64), new THREE.MeshBasicMaterial({color:0x35c8ff,transparent:true,opacity:.5,side:THREE.DoubleSide}));
+holo.rotation.x=-Math.PI/2; holo.position.y=.28; scene.add(holo);
 
 /* ================= SNAKE ================= */
-const SEGS = 14;
-const snake = new THREE.Group(); snake.position.y = .25; scene.add(snake);
-const segMats = [], segMeshes = [];
+const SEGS=14;
+const snake = new THREE.Group(); snake.position.y=.25; scene.add(snake);
+const segMats=[], segMeshes=[];
 for(let i=0;i<SEGS;i++){
-  const r = .55 - i*.026;
-  const m = new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(i/SEGS,.85,.55), roughness:.3, emissive:0x000000});
-  const s = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 16), m);
+  const r=.55-i*.026;
+  const m=new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(i/SEGS,.85,.55),roughness:.3,emissive:0x000000});
+  const s=new THREE.Mesh(new THREE.SphereGeometry(r,20,16),m);
   snake.add(s); segMats.push(m); segMeshes.push(s);
 }
-const head = segMeshes[0];
+const head=segMeshes[0];
 function eye(x){
-  const g = new THREE.Group();
-  const w = new THREE.Mesh(new THREE.SphereGeometry(.16,12,10), new THREE.MeshStandardMaterial({color:0xffffff}));
-  const p = new THREE.Mesh(new THREE.SphereGeometry(.08,10,8), new THREE.MeshStandardMaterial({color:0x101336}));
-  p.position.z = .1; g.add(w); g.add(p); g.position.set(x,.24,.42); return g;
+  const g=new THREE.Group();
+  const w=new THREE.Mesh(new THREE.SphereGeometry(.16,12,10),new THREE.MeshStandardMaterial({color:0xffffff}));
+  const p=new THREE.Mesh(new THREE.SphereGeometry(.08,10,8),new THREE.MeshStandardMaterial({color:0x101336}));
+  p.position.z=.1; g.add(w);g.add(p); g.position.set(x,.24,.42); return g;
 }
 head.add(eye(-.22)); head.add(eye(.22));
-const tongue = new THREE.Mesh(new THREE.ConeGeometry(.05,.5,8), new THREE.MeshStandardMaterial({color:0xff5470}));
-tongue.rotation.x = Math.PI/2; tongue.position.set(0,-.05,.75); head.add(tongue);
-/* artifact glasses on head (hidden until unlocked) */
-const glasses = new THREE.Group();
-[[-.22],[.22]].forEach(([x])=>{
-  const lens = new THREE.Mesh(new THREE.BoxGeometry(.3,.22,.06),
-    new THREE.MeshStandardMaterial({color:0x111133, emissive:0x35c8ff, emissiveIntensity:.8}));
-  lens.position.set(x,.26,.5); glasses.add(lens);
-});
-const bridge = new THREE.Mesh(new THREE.BoxGeometry(.16,.05,.05), new THREE.MeshStandardMaterial({color:0x222244}));
-bridge.position.set(0,.28,.5); glasses.add(bridge);
-glasses.visible = false; head.add(glasses);
+const tongue=new THREE.Mesh(new THREE.ConeGeometry(.05,.5,8),new THREE.MeshStandardMaterial({color:0xff5470}));
+tongue.rotation.x=Math.PI/2; tongue.position.set(0,-.05,.75); head.add(tongue);
+const glasses=new THREE.Group();
+[[-.22],[.22]].forEach(([x])=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.3,.22,.06),new THREE.MeshStandardMaterial({color:0x111133,emissive:0x35c8ff,emissiveIntensity:.8}));l.position.set(x,.26,.5);glasses.add(l);});
+const bridge=new THREE.Mesh(new THREE.BoxGeometry(.16,.05,.05),new THREE.MeshStandardMaterial({color:0x222244}));
+bridge.position.set(0,.28,.5); glasses.add(bridge); glasses.visible=false; head.add(glasses);
 
-const particles = new THREE.Group(); scene.add(particles);
-function burst(color, n=24, at){
+const particles=new THREE.Group(); scene.add(particles);
+function burst(color,n=24,at){
   for(let i=0;i<n;i++){
-    const p = new THREE.Mesh(new THREE.SphereGeometry(.07,6,6), new THREE.MeshBasicMaterial({color}));
-    const base = at || new THREE.Vector3(0,1.4,2.6);
-    p.position.set(base.x+(Math.random()-.5)*2, base.y+Math.random()*1.2, base.z+(Math.random()-.5)*2);
-    p.userData.v = new THREE.Vector3((Math.random()-.5)*.12, .06+Math.random()*.1, (Math.random()-.5)*.12);
-    p.userData.life = 1; particles.add(p);
+    const p=new THREE.Mesh(new THREE.SphereGeometry(.07,6,6),new THREE.MeshBasicMaterial({color}));
+    const base=at||new THREE.Vector3(0,1.4,2.6);
+    p.position.set(base.x+(Math.random()-.5)*1.6,base.y+Math.random()*1.1,base.z+(Math.random()-.5)*1.6);
+    p.userData.v=new THREE.Vector3((Math.random()-.5)*.12,.06+Math.random()*.1,(Math.random()-.5)*.12);
+    p.userData.life=1; particles.add(p);
   }
 }
+let fireT=0;
+function fireBreath(){
+  fireT=1.4; sfx('fire'); setTrickLabel('🔥 UGNIS!');
+  addPoints(6,null,'🔥');
+}
 
-/* ================= GAME STATE ================= */
-let trickMode = 'idle', trickT = 0, hueShift = 0;
-let targetScale = 1, droneTarget = new THREE.Vector3(0,1.2,2.6), droneOn = false;
-let energy = 60;
-let points = 0;
-const awarded = new Set();
+/* ================= STATE ================= */
+let trickMode='idle', trickT=0, hueShift=0;
+let targetScale=1, droneTarget=new THREE.Vector3(0,1.2,2.6), droneOn=false;
+let energy=60, turbo=0, points=0, spinVel=0, mood=0, excite=0;
+const awarded=new Set();
+let feedShown=false;
 
-const UNLOCKS = [
-  {at:0,   key:'triukai2', label:'🎓 Triukai (2 gestai)'},
-  {at:30,  key:'triukai6', label:'🎓 Visi 6 gestai'},
-  {at:60,  key:'dydis',    label:'📏 Dydžio valdymas'},
-  {at:100, key:'dronas',   label:'🚁 Drono režimas'},
-  {at:150, key:'energija', label:'⚡ Energijos valdymas'},
-  {at:200, key:'artefaktas',label:'🕶️ ARTEFAKTAS'}
+const UNLOCKS=[
+  {at:0,key:'triukai2',label:'🎓 Triukai (2 gestai)'},
+  {at:30,key:'triukai6',label:'🎓 Visi 6 gestai + savo gestas'},
+  {at:60,key:'dydis',label:'📏 Dydžio valdymas'},
+  {at:100,key:'dronas',label:'🚁 Drono režimas'},
+  {at:140,key:'energija',label:'⚡ Energija (kumštis!)'},
+  {at:180,key:'piesimas',label:'✍️ Burtų piešimas'},
+  {at:230,key:'begimas',label:'🏃 Bėgimo trasa'},
+  {at:320,key:'artefaktas',label:'🕶️ ARTEFAKTAS'}
 ];
-function unlocked(key){ const u = UNLOCKS.find(u=>u.key===key); return u && points>=u.at; }
-
-function addPoints(n, reasonKey, label){
+function unlocked(k){const u=UNLOCKS.find(u=>u.key===k);return u&&points>=u.at;}
+function addPoints(n,reasonKey,label){
   if(reasonKey){ if(awarded.has(reasonKey)) return; awarded.add(reasonKey); }
-  const before = points; points += n;
-  document.getElementById('ptsBadge').textContent = '⭐ '+points;
-  const f = document.createElement('div'); f.className='float-pts'; f.textContent='+'+n+(label?' '+label:'');
-  f.style.left = (30+Math.random()*40)+'%'; f.style.top='30%';
+  const before=points; points+=n;
+  document.getElementById('ptsBadge').textContent='⭐ '+points;
+  const f=document.createElement('div'); f.className='float-pts'; f.textContent='+'+n+(label?' '+label:'');
+  f.style.left=(30+Math.random()*40)+'%'; f.style.top='30%';
   document.getElementById('stage').appendChild(f); setTimeout(()=>f.remove(),1500);
+  sfx('blip');
   UNLOCKS.forEach(u=>{
-    if(before<u.at && points>=u.at){
-      status('🔓 ATRAKINTA: '+u.label+'!', 3500); burst(0xffd94a, 34);
-      if(u.key==='artefaktas'){ glasses.visible = true; document.getElementById('artifactOverlay').classList.add('on'); }
-      buildTabs(); buildUnlockList(); renderModePanel();
+    if(before<u.at&&points>=u.at){
+      status('🔓 ATRAKINTA: '+u.label+'!',3500); burst(0xffd94a,34); sfx('fanfare');
+      if(u.key==='artefaktas'){glasses.visible=true;document.getElementById('artifactOverlay').classList.add('on');}
+      buildTabs(); renderModePanel();
     }
   });
   buildUnlockList();
 }
 function buildUnlockList(){
-  const el = document.getElementById('unlockList'); el.innerHTML='';
-  let nextFound = false;
+  const el=document.getElementById('unlockList'); el.innerHTML='';
+  let nextFound=false;
   UNLOCKS.forEach(u=>{
-    const d = document.createElement('div');
-    const done = points>=u.at;
-    let cls = 'unlock-row'+(done?' done':'');
-    if(!done && !nextFound){ cls += ' next'; nextFound = true; }
-    d.className = cls;
-    d.innerHTML = (done?'✅':'🔒')+' <span style="flex:1">'+u.label+'</span> <span>'+u.at+'⭐</span>';
+    const d=document.createElement('div'); const done=points>=u.at;
+    let cls='unlock-row'+(done?' done':''); if(!done&&!nextFound){cls+=' next';nextFound=true;}
+    d.className=cls; d.innerHTML=(done?'✅':'🔒')+' <span style="flex:1">'+u.label+'</span><span>'+u.at+'⭐</span>';
     el.appendChild(d);
   });
-  const maxAt = UNLOCKS[UNLOCKS.length-1].at;
-  document.getElementById('progBarFill').style.width = Math.min(100, points/maxAt*100)+'%';
+  document.getElementById('progBarFill').style.width=Math.min(100,points/UNLOCKS[UNLOCKS.length-1].at*100)+'%';
 }
+document.getElementById('resetBtn').onclick=()=>{ if(confirm('Pradėti VISKĄ iš naujo? (taškai ir gestai išsitrins)')) location.reload(); };
 
 /* ================= MODES ================= */
-let uiMode = 'triukai';   // triukai | dydis | dronas | energija
-const MODES = [
-  {key:'triukai', em:'🎓', nm:'Triukai', need:'triukai2'},
-  {key:'dydis',   em:'📏', nm:'Dydis',   need:'dydis'},
-  {key:'dronas',  em:'🚁', nm:'Dronas',  need:'dronas'},
-  {key:'energija',em:'⚡', nm:'Energija',need:'energija'}
+let uiMode='triukai';
+const MODES=[
+  {key:'triukai',em:'🎓',nm:'Triukai',need:'triukai2'},
+  {key:'dydis',em:'📏',nm:'Dydis',need:'dydis'},
+  {key:'dronas',em:'🚁',nm:'Dronas',need:'dronas'},
+  {key:'energija',em:'⚡',nm:'Energija',need:'energija'},
+  {key:'piesimas',em:'✍️',nm:'Burtai',need:'piesimas'},
+  {key:'begimas',em:'🏃',nm:'Bėgimas',need:'begimas'}
 ];
-const EDU = {
-  triukai:'<b>Kaip mokosi AI?</b> Iš TAVO pavyzdžių. Kompiuteris nemato „kumščio" — jis lygina 21 taško skaičius su tais, kuriuos TU įrašei.',
-  dydis:'<b>Kompiuterinė rega:</b> kompiuteris išmatuoja ATSTUMĄ tarp tavo delnų — geometrija iš taškų. Taip robotai matuoja pasaulį.',
-  dronas:'<b>Delnas = kursorius.</b> Lygiai taip gestais valdomi tikri DJI dronai! Tavo delno vieta kadre virsta gyvatės vieta erdvėje.',
-  energija:'<b>3D kryptis:</b> kompiuteris žino, ar delnas atsuktas Į kamerą, ar NUO jos — iš taškų gylio. Delnas į kamerą = krauna ⚡, nuo kameros = leidžia.'
+const EDU={
+  triukai:'<b>AI mokosi iš TAVO pavyzdžių.</b> 21 taško skaičiai lyginami su tais, kuriuos įrašei.',
+  dydis:'<b>Geometrija iš taškų:</b> kompiuteris matuoja atstumą tarp delnų. Taip robotai matuoja pasaulį.',
+  dronas:'<b>Delnas = kursorius.</b> Lygiai taip valdomi DJI dronai!',
+  energija:'<b>3D kryptis + forma:</b> delnas į kamerą krauna. SUSPAUSK KUMŠTĮ kelis kartus — pumpuoji energiją!',
+  piesimas:'<b>Simbolių atpažinimas:</b> tavo piešinys ore virsta taškais, o AI atspėja figūrą. Taip veikia rašysenos atpažinimas!',
+  begimas:'<b>Dėmesys + reakcija.</b> O suklydus 3 kartus — kvėpavimo pauzė. Frustracija normalu: taip auga smegenys.'
 };
 function buildTabs(){
-  const el = document.getElementById('modeTabs'); el.innerHTML='';
+  const el=document.getElementById('modeTabs'); el.innerHTML='';
   MODES.forEach(m=>{
-    const b = document.createElement('button');
-    const isUn = unlocked(m.need);
-    b.className = 'mode-tab'+(uiMode===m.key?' on':'')+(isUn?'':' locked');
-    b.innerHTML = m.em+' '+m.nm+(isUn?'':' <span class="lock">🔒</span>');
-    b.onclick = ()=>{ if(!isUn){status('🔒 Dar užrakinta — rink taškus!');return;} uiMode=m.key; buildTabs(); renderModePanel(); addPoints(15,'try-'+m.key,m.em); };
+    const b=document.createElement('button');
+    const isUn=unlocked(m.need);
+    b.className='mode-tab'+(uiMode===m.key?' on':'')+(isUn?'':' locked');
+    b.innerHTML=m.em+' '+m.nm+(isUn?'':' 🔒');
+    b.onclick=()=>{ if(!isUn){status('🔒 Rink taškus!');return;}
+      stopRunner(); uiMode=m.key; buildTabs(); renderModePanel(); addPoints(15,'try-'+m.key,m.em);
+      if(m.key==='begimas') startRunner();
+    };
     el.appendChild(b);
   });
 }
 
-/* gestures (KNN) */
-const GESTAI = [
-  {key:'sokis',      em:'✊', nm:'Kumštis → Šokis', tier:1},
-  {key:'vaivorykste',em:'🖐', nm:'Penki → Vaivorykštė', tier:1},
-  {key:'augti',      em:'☝️', nm:'Vienas → Augimas', tier:2},
-  {key:'suktis',     em:'✌️', nm:'Žirklės → Suktukas', tier:2},
-  {key:'svyteti',    em:'🤟', nm:'Rokeris → Švytėjimas', tier:2},
-  {key:'miegas',     em:'👌', nm:'OK → Miegelis', tier:2}
+/* gestures */
+const GESTAI=[
+  {key:'sokis',em:'✊',nm:'Kumštis → Šokis',tier:1},
+  {key:'vaivorykste',em:'🖐',nm:'Penki → Vaivorykštė',tier:1},
+  {key:'augti',em:'☝️',nm:'Vienas → Augimas',tier:2},
+  {key:'suktis',em:'✌️',nm:'Žirklės → Suktukas',tier:2},
+  {key:'svyteti',em:'🤟',nm:'Rokeris → Švytėjimas',tier:2},
+  {key:'miegas',em:'👌',nm:'OK → Miegelis',tier:2}
 ];
-const examples = [];
-let recording = null, recLeft = 0;
+const examples=[]; let recording=null, recLeft=0, customCount=0;
+
+/* spells */
+const SPELLS=[
+  {key:'circle',em:'⭕',nm:'Ratas → Skydas',path:'M22,4 A18,18 0 1,1 21.9,4'},
+  {key:'triangle',em:'🔺',nm:'Trikampis → UGNIS',path:'M22,4 L40,38 L4,38 Z'},
+  {key:'square',em:'🟦',nm:'Kvadratas → Blokas',path:'M6,6 H38 V38 H6 Z'},
+  {key:'zigzag',em:'⚡',nm:'Žaibas → Turbo',path:'M10,4 L30,4 L16,22 L34,22 L12,40'}
+];
+let mathTask=null;
 
 function renderModePanel(){
-  const t = document.getElementById('rpTitle'), b = document.getElementById('rpBody');
-  document.getElementById('eduTip').style.display='block';
-  document.getElementById('eduTip').innerHTML = EDU[uiMode];
+  const t=document.getElementById('rpTitle'), b=document.getElementById('rpBody');
+  const tip=document.getElementById('eduTip');
+  tip.style.display='block'; tip.innerHTML=EDU[uiMode];
+  document.getElementById('runHud').classList.toggle('hidden', uiMode!=='begimas');
+  document.getElementById('progressPanel').classList.toggle('hidden', uiMode==='begimas');
   if(uiMode==='triukai'){
-    t.textContent='🎓 Triukų mokykla';
-    b.innerHTML='';
+    t.textContent='🎓 Triukų mokykla'; b.innerHTML='';
     GESTAI.forEach(g=>{
-      const locked = g.tier===2 && !unlocked('triukai6');
-      const row = document.createElement('div'); row.className='gest-row'+(locked?' locked':''); row.id='row-'+g.key;
-      row.innerHTML = `<span class="em">${g.em}</span><span class="nm">${g.nm}</span><span class="cnt" id="cnt-${g.key}">${examples.filter(e=>e.label===g.key).length} pvz.</span>`;
+      const locked=g.tier===2&&!unlocked('triukai6');
+      const row=document.createElement('div'); row.className='gest-row'+(locked?' locked':''); row.id='row-'+g.key;
+      row.innerHTML=`<span class="em">${g.em}</span><span class="nm">${g.nm}</span><span class="cnt" id="cnt-${g.key}">${examples.filter(e=>e.label===g.key).length} pvz.</span>`;
       if(!locked){
-        const btn = document.createElement('button'); btn.textContent='● Įrašyti'; btn.id='rec-'+g.key;
-        btn.onclick = ()=>{ recording=g.key; recLeft=20; btn.classList.add('rec'); btn.textContent='Rodyk!'; };
+        const btn=document.createElement('button'); btn.textContent='● Įrašyti'; btn.id='rec-'+g.key;
+        btn.onclick=()=>{recording=g.key;recLeft=20;btn.classList.add('rec');btn.textContent='Rodyk!';};
         row.appendChild(btn);
       }
       b.appendChild(row);
     });
+    if(unlocked('triukai6')){
+      const add=document.createElement('button'); add.className='big-btn'; add.style.cssText='font-size:15px;padding:9px 14px;margin-top:4px;width:100%';
+      add.textContent='➕ Sukurk SAVO gestą (→ 🔥 ugnis)';
+      add.onclick=()=>{
+        const name=prompt('Kaip pavadinsi savo gestą? (pvz. „Drakono letena")'); if(!name) return;
+        const k='custom'+(++customCount);
+        GESTAI.push({key:k,em:'🌟',nm:name+' → Ugnis',tier:1,custom:true});
+        renderModePanel(); status('Dabar įrašyk „'+name+'" pavyzdžius!');
+        addPoints(15,'custom-gesture','🌟');
+      };
+      b.appendChild(add);
+    }
+    const hint=document.createElement('div'); hint.className='mode-help'; hint.style.marginTop='6px';
+    hint.innerHTML='🌀 <b>3 pirštai</b> bet kada = suktukas · 🤏 <b>visi pirštų galiukai kartu</b> = UGNIS!';
+    b.appendChild(hint);
   } else if(uiMode==='dydis'){
     t.textContent='📏 Dydžio valdymas';
-    b.innerHTML='<div class="mode-help">Parodyk <b>ABI rankas</b>.<br>🤲 Delnai arti = gyvatė mažėja<br>👐 Delnai plačiai = gyvatė AUGA!<br><br>Kompiuteris matuoja atstumą tarp rankų.</div>';
+    b.innerHTML='<div class="mode-help">🤲 Delnai arti = mažėja<br>👐 Delnai plačiai = AUGA!</div>';
   } else if(uiMode==='dronas'){
     t.textContent='🚁 Drono režimas';
-    b.innerHTML='<div class="mode-help">Ištiesk <b>delną (5 pirštai)</b> ir vedžiok —<br>gyvatės galva seks tavo delną kaip DRONAS pilotą.<br><br>✊ Kumštis = STOP (dronas nusileidžia).<br><br>Taip valdomi tikri DJI dronai!</div>';
+    b.innerHTML='<div class="mode-help">🖐 Delnas vedžioja gyvatę<br>✊ Kumštis = STOP<br><br>Taip valdomi tikri DJI dronai!</div>';
   } else if(uiMode==='energija'){
     t.textContent='⚡ Energijos valdymas';
-    b.innerHTML='<div class="mode-help">Delnas <b>Į kamerą</b> 🖐 = energija KRAUNASI<br>Delnas <b>NUO kameros</b> 🤚 = energija leidžiama —<br>gyvatė lekia turbo greičiu su žiežirbom!<br><br>Apversk delną ir stebėk ⚡ juostą viršuje.</div>';
+    b.innerHTML='<div class="mode-help">🖐→✊→🖐 <b>PUMPUOK kumščiu</b> — krauna!<br>🤚 delnas NUO kameros = TURBO leidžia<br><br>Stebėk ⚡ juostą viršuje.</div>';
+  } else if(uiMode==='piesimas'){
+    t.textContent='✍️ Burtų knyga';
+    let h='<div class="mode-help">Piešk ore <b>VIENU pirštu</b> ☝️<br>Baigei? Sugniaužk kumštį ✊ — AI atspės!</div>';
+    SPELLS.forEach(s=>{
+      h+=`<div class="spell-card"><svg width="44" height="44" viewBox="0 0 44 44"><path d="${s.path}" fill="none" stroke="#7ee0ff" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></svg><span>${s.em} ${s.nm}</span></div>`;
+    });
+    h+='<button id="mathBtn" class="big-btn" style="font-size:15px;padding:9px 14px;width:100%;margin-top:4px">🧮 Matematikos iššūkis!</button>';
+    b.innerHTML=h;
+    document.getElementById('mathBtn').onclick=newMathTask;
+  } else if(uiMode==='begimas'){
+    t.textContent='🏃 Bėgimo trasa';
+    b.innerHTML='<div class="mode-help">🖐 Delnas kairėn/dešinėn/aukštyn — vairuok!<br>🌀 Pamačius „SUKTUKAS" — rodyk 3 pirštus!<br><br>3 lygiai. Klaidos = mokymasis 💙</div>';
   }
 }
-
-/* ================= KNN ================= */
-function toVec(lm){
-  const w = lm[0], s = Math.hypot(lm[9].x-w.x, lm[9].y-w.y) || 1;
-  return lm.flatMap(p=>[(p.x-w.x)/s,(p.y-w.y)/s,(p.z-w.z)/s]);
+function newMathTask(){
+  const pairs=[[1,1,2],[1,2,3],[2,1,3],[0,1,1],[0,2,2],[3,0,3],[2,0,2],[1,0,1]];
+  const p=pairs[Math.floor(Math.random()*pairs.length)];
+  mathTask={a:p[0],b:p[1],ans:p[2]};
+  const el=document.getElementById('mathTask');
+  el.textContent=`${p[0]} + ${p[1]} = ?  (nupiešk atsakymą!)`;
+  el.style.display='block';
 }
-function classify(lm, k=7){
-  if(examples.length<8) return null;
-  const v = toVec(lm);
-  const near = examples.map(e=>({l:e.label,d:e.vec.reduce((s,x,i)=>s+(x-v[i])**2,0)})).sort((a,b)=>a.d-b.d).slice(0,k);
-  const votes={}; near.forEach(n=>votes[n.l]=(votes[n.l]||0)+1);
+
+/* ================= KNN + geometry ================= */
+function toVec(lm){const w=lm[0],s=Math.hypot(lm[9].x-w.x,lm[9].y-w.y)||1;return lm.flatMap(p=>[(p.x-w.x)/s,(p.y-w.y)/s,(p.z-w.z)/s]);}
+function classify(lm,k=7){
+  if(examples.length<8)return null;
+  const v=toVec(lm);
+  const near=examples.map(e=>({l:e.label,d:e.vec.reduce((s,x,i)=>s+(x-v[i])**2,0)})).sort((a,b)=>a.d-b.d).slice(0,k);
+  const votes={};near.forEach(n=>votes[n.l]=(votes[n.l]||0)+1);
   const best=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
-  return {label:best[0], conf:best[1]/k};
+  return {label:best[0],conf:best[1]/k};
 }
 function raisedFingers(lm){
   let n=0;
-  [[8,6],[12,10],[16,14],[20,18]].forEach(([tip,pip])=>{ if(lm[tip].y<lm[pip].y) n++; });
-  if(Math.abs(lm[4].x-lm[17].x)>Math.abs(lm[3].x-lm[17].x)) n++;
+  [[8,6],[12,10],[16,14],[20,18]].forEach(([t,p])=>{if(lm[t].y<lm[p].y)n++;});
+  if(Math.abs(lm[4].x-lm[17].x)>Math.abs(lm[3].x-lm[17].x))n++;
   return n;
 }
-function palmFacing(lm, handedness){
-  /* normal z from cross product (index_mcp-wrist) x (pinky_mcp-wrist); sign flips per hand */
-  const w=lm[0], a=lm[5], b=lm[17];
-  const v1={x:a.x-w.x,y:a.y-w.y,z:a.z-w.z}, v2={x:b.x-w.x,y:b.y-w.y,z:b.z-w.z};
-  const nz = v1.x*v2.y - v1.y*v2.x;
-  return (handedness==='Right'? nz<0 : nz>0);   /* true = palm toward camera */
+function onlyIndex(lm){
+  const idx=lm[8].y<lm[6].y, mid=lm[12].y<lm[10].y, ring=lm[16].y<lm[14].y, pin=lm[20].y<lm[18].y;
+  return idx&&!mid&&!ring&&!pin;
+}
+function tipsTogether(lm){
+  const tips=[4,8,12,16,20].map(i=>lm[i]);
+  let mx=0;
+  for(let i=0;i<5;i++)for(let j=i+1;j<5;j++){const d=Math.hypot(tips[i].x-tips[j].x,tips[i].y-tips[j].y);if(d>mx)mx=d;}
+  const ref=Math.hypot(lm[0].x-lm[9].x,lm[0].y-lm[9].y)||1;
+  return mx<ref*.55;
+}
+function palmFacing(lm,handed){
+  const w=lm[0],a=lm[5],b=lm[17];
+  const nz=(a.x-w.x)*(b.y-w.y)-(a.y-w.y)*(b.x-w.x);
+  return (handed==='Right'?nz<0:nz>0);
 }
 
-/* ================= TRICK ANIMS ================= */
-function setTrick(m){
-  if(trickMode===m) return;
-  trickMode=m; trickT=0;
-  const names={sokis:'💃 ŠOKIS!',vaivorykste:'🌈 VAIVORYKŠTĖ!',augti:'🍄 AUGIMAS!',suktis:'🌀 SUKTUKAS!',svyteti:'✨ ŠVYTĖJIMAS!',miegas:'😴 Miegelis…',idle:''};
+/* ================= $1-style shape recognizer ================= */
+function resample(pts,n=32){
+  const d=[];let L=0;
+  for(let i=1;i<pts.length;i++){d.push(Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));L+=d[i-1];}
+  if(L===0)return null;
+  const step=L/(n-1),out=[pts[0].slice()];let acc=0,i=1;let prev=pts[0].slice();
+  while(i<pts.length){
+    const dd=Math.hypot(pts[i][0]-prev[0],pts[i][1]-prev[1]);
+    if(acc+dd>=step){
+      const t=(step-acc)/dd;
+      const nx=prev[0]+t*(pts[i][0]-prev[0]),ny=prev[1]+t*(pts[i][1]-prev[1]);
+      out.push([nx,ny]);prev=[nx,ny];acc=0;
+      if(out.length===n)break;
+    }else{acc+=dd;prev=pts[i].slice();i++;}
+  }
+  while(out.length<n)out.push(out[out.length-1].slice());
+  return out;
+}
+function normalize(pts){
+  let cx=0,cy=0;pts.forEach(p=>{cx+=p[0];cy+=p[1];});cx/=pts.length;cy/=pts.length;
+  let mx=0;pts.forEach(p=>{const d=Math.hypot(p[0]-cx,p[1]-cy);if(d>mx)mx=d;});mx=mx||1;
+  return pts.map(p=>[(p[0]-cx)/mx,(p[1]-cy)/mx]);
+}
+function dist(a,b){let s=0;for(let i=0;i<a.length;i++)s+=Math.hypot(a[i][0]-b[i][0],a[i][1]-b[i][1]);return s/a.length;}
+function gen(fn,n=48){const o=[];for(let i=0;i<n;i++)o.push(fn(i/(n-1)));return o;}
+const TEMPLATES={
+  circle: gen(t=>[Math.cos(t*6.283-1.57),Math.sin(t*6.283-1.57)]),
+  triangle: gen(t=>{const s=t*3;if(s<1)return[-1+2*s? -1+2*s*1:0,0].length?[(-1+2*s),1-2*s*0]:null; return null;}),
+  square: null, zigzag: null, d1:null, d2:null, d3:null
+};
+/* explicit polyline templates */
+function poly(points,n=48){
+  const pts=[];let total=0;const segs=[];
+  for(let i=1;i<points.length;i++){const L=Math.hypot(points[i][0]-points[i-1][0],points[i][1]-points[i-1][1]);segs.push(L);total+=L;}
+  for(let i=0;i<n;i++){
+    let d=total*i/(n-1),j=0;
+    while(j<segs.length&&d>segs[j]){d-=segs[j];j++;}
+    if(j>=segs.length){pts.push(points[points.length-1].slice());continue;}
+    const t=segs[j]?d/segs[j]:0;
+    pts.push([points[j][0]+t*(points[j+1][0]-points[j][0]),points[j][1]+t*(points[j+1][1]-points[j][1])]);
+  }
+  return pts;
+}
+TEMPLATES.triangle=poly([[0,-1],[1,.85],[-1,.85],[0,-1]]);
+TEMPLATES.square=poly([[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]);
+TEMPLATES.zigzag=poly([[-1,-1],[.4,-1],[-.5,.1],[.9,.1],[-.6,1]]);
+TEMPLATES.d1=poly([[-.2,-.7],[.15,-1],[.15,1]]);
+TEMPLATES.d2=poly([[-.8,-.55],[-.3,-1],[.5,-.95],[.75,-.4],[-.85,.95],[.85,.95]]);
+TEMPLATES.d3=poly([[-.7,-.9],[.6,-.9],[-.05,-.1],[.7,.35],[.35,.95],[-.75,.8]]);
+function recognizeShape(raw){
+  if(raw.length<8)return null;
+  const rs=resample(raw); if(!rs)return null;
+  const nn=normalize(rs);
+  let best=null,bd=1e9;
+  Object.entries(TEMPLATES).forEach(([k,tpl])=>{
+    if(!tpl)return;
+    const nt=normalize(resample(tpl));
+    /* try both directions */
+    const d1v=dist(nn,nt), d2v=dist(nn,nt.slice().reverse());
+    const d=Math.min(d1v,d2v);
+    if(d<bd){bd=d;best=k;}
+  });
+  return bd<.44?{shape:best,score:bd}:null;
+}
+
+/* draw trail */
+let trail=[], drawing=false;
+const dCv=document.getElementById('drawCanvas');
+function sizeDraw(){dCv.width=dCv.clientWidth;dCv.height=dCv.clientHeight;}
+sizeDraw(); addEventListener('resize',sizeDraw);
+function renderTrail(){
+  const x=dCv.getContext('2d');
+  x.clearRect(0,0,dCv.width,dCv.height);
+  if(trail.length<2)return;
+  x.strokeStyle='#7ee0ff';x.lineWidth=6;x.lineCap='round';x.lineJoin='round';
+  x.shadowColor='#7ee0ff';x.shadowBlur=14;
+  x.beginPath();x.moveTo(trail[0][0],trail[0][1]);
+  for(let i=1;i<trail.length;i++)x.lineTo(trail[i][0],trail[i][1]);
+  x.stroke();x.shadowBlur=0;
+}
+function finishDraw(){
+  if(trail.length<8){trail=[];renderTrail();return;}
+  const rec=recognizeShape(trail);
+  trail=[];renderTrail();
+  if(!rec){status('🤔 Neatpažinau… bandyk lėčiau ir didesniu mostu!');sfx('fail');return;}
+  const s=rec.shape;
+  if(mathTask){
+    const map={d1:1,d2:2,d3:3};
+    if(map[s]===mathTask.ans){
+      status('🎉 TEISINGAI! '+mathTask.a+'+'+mathTask.b+'='+mathTask.ans);
+      addPoints(12,null,'🧮'); sfx('fanfare'); burst(0x41d67c); excite+=1;
+      document.getElementById('mathTask').style.display='none'; mathTask=null;
+      setTimeout(newMathTask, 1800);
+    } else if(map[s]){
+      status('Nupiešei '+map[s]+' — pabandyk dar! Tu mokaisi 💙'); sfx('fail');
+    } else { status('Čia figūra, o reikia SKAIČIAUS 1–3 🙂'); }
+    return;
+  }
+  if(s==='triangle'){fireBreath();}
+  else if(s==='circle'){setTrickLabel('🛡 SKYDAS!');shieldT=3;sfx('chime');addPoints(6,null,'🛡');}
+  else if(s==='square'){setTrickLabel('🟦 BLOKAS!');spawnBlock();sfx('blip');addPoints(6,null,'🟦');}
+  else if(s==='zigzag'){setTrickLabel('⚡ TURBO!');turbo=1;energy=Math.max(0,energy-15);sfx('whoosh');addPoints(6,null,'⚡');}
+  else if(s==='d1'||s==='d2'||s==='d3'){status('Skaičius! Spausk 🧮 Matematikos iššūkį ir naudok jį ten!');}
+}
+let shieldT=0; let shieldMesh=null;
+function spawnBlock(){
+  const b=new THREE.Mesh(new THREE.BoxGeometry(.9,.9,.9),new THREE.MeshStandardMaterial({color:0x8891ff}));
+  b.position.set((Math.random()-.5)*5,-.2+.45,(Math.random())*2);
+  scene.add(b); setTimeout(()=>scene.remove(b),8000);
+}
+
+/* ================= RUNNER (Temple Run) ================= */
+let runner=null;
+function startRunner(){
+  runner={lvl:1,lives:3,misses:0,streakMiss:0,passed:0,need:10,speed:.09,obs:[],t:0,spinGate:null,spinNeed:false,waiting:false};
+  updRunHud(); status('🏃 LYGIS 1 — vairuok delnu!',2500);
+}
+function stopRunner(){
+  if(!runner)return;
+  runner.obs.forEach(o=>scene.remove(o.mesh)); if(runner.spinGate)scene.remove(runner.spinGate.mesh);
+  runner=null;
+  document.getElementById('spinAlert').style.display='none';
+}
+function updRunHud(){
+  if(!runner)return;
+  document.getElementById('runLvl').textContent='Lygis '+runner.lvl+' / 3';
+  document.getElementById('runLives').textContent='❤️'.repeat(runner.lives)+'🖤'.repeat(3-runner.lives);
+  document.getElementById('runTime').textContent='⏱ '+Math.floor(runner.t)+' s';
+  document.getElementById('lvlBarFill').style.width=(runner.passed/runner.need*100)+'%';
+}
+function runnerSpawn(){
+  if(!runner||runner.waiting)return;
+  if(Math.random()<.03+runner.lvl*.012 && runner.obs.length<4 && !runner.spinGate){
+    if(runner.passed>2 && Math.random()<.18){
+      const g=new THREE.Mesh(new THREE.TorusGeometry(1.6,.18,10,32),new THREE.MeshStandardMaterial({color:0xff5470,emissive:0x661122,emissiveIntensity:.8}));
+      g.position.set(0,1.5,-26); scene.add(g);
+      runner.spinGate={mesh:g}; document.getElementById('spinAlert').style.display='block'; sfx('whoosh');
+    }else{
+      const lane=[-2.6,0,2.6][Math.floor(Math.random()*3)];
+      const high=Math.random()<.3;
+      const m=new THREE.Mesh(new THREE.BoxGeometry(1.8,high?.7:1.6,1),new THREE.MeshStandardMaterial({color:0x5a63d8}));
+      m.position.set(lane, high?2.4:.8, -26);
+      scene.add(m); runner.obs.push({mesh:m,hit:false,high});
+    }
+  }
+}
+
+/* ================= TRICKS ================= */
+function setTrickLabel(txt){
   const t=document.getElementById('trickName');
-  t.textContent=names[m]||''; t.style.opacity=(m==='idle')?0:1;
-  if(m!=='idle'&&m!=='miegas'){ burst(0xffd94a); addPoints(4,'trick-'+m,''); }
-  if(m==='augti') targetScale=1.7; else if(m!=='miegas'&&uiMode!=='dydis') targetScale=1;
+  t.textContent=txt; t.style.opacity=1;
+  clearTimeout(t._t); t._t=setTimeout(()=>t.style.opacity=0,2200);
+}
+function setTrick(m){
+  if(trickMode===m)return;
+  trickMode=m;trickT=0;
+  const names={sokis:'💃 ŠOKIS!',vaivorykste:'🌈 VAIVORYKŠTĖ!',augti:'🍄 AUGIMAS!',suktis:'🌀 SUKTUKAS!',svyteti:'✨ ŠVYTĖJIMAS!',miegas:'😴 Miegelis…'};
+  if(m!=='idle')setTrickLabel(names[m]||'🌟');
+  if(m!=='idle'&&m!=='miegas'){burst(0xffd94a);addPoints(4,'trick-'+m,'');excite=Math.min(3,excite+1);sfx('chime');}
+  if(m==='augti')targetScale=1.7;else if(m!=='miegas'&&uiMode!=='dydis')targetScale=1;
+  if(GESTAI.find(g=>g.key===m&&g.custom))fireBreath();
 }
 function status(msg,ms=2600){
   const el=document.getElementById('statusMsg');
-  el.textContent=msg; el.classList.remove('hidden');
-  clearTimeout(el._t); if(ms) el._t=setTimeout(()=>el.classList.add('hidden'),ms);
+  el.textContent=msg;el.classList.remove('hidden');
+  clearTimeout(el._t);if(ms)el._t=setTimeout(()=>el.classList.add('hidden'),ms);
 }
 
-/* ================= RENDER LOOP ================= */
-const clock = new THREE.Clock();
-let turbo = 0;
+/* ================= MAIN LOOP ================= */
+const clock=new THREE.Clock();
 function animate(){
-  const t = clock.getElapsedTime();
-  trickT += .016;
-  tubes.forEach(tb=>{ tb.userData.core.rotation.y += .02; tb.userData.core.position.y = 2 + Math.sin(t*1.4+tb.position.x)*.25; });
-  holo.rotation.z += .004;
-  const speed = (trickMode==='miegas'?.25:trickMode==='sokis'?3.2:1.4) + turbo*3;
-  const amp = trickMode==='miegas'?.25:trickMode==='sokis'?1.1:.7;
-  for(let i=0;i<SEGS;i++){
-    const ph = t*speed - i*.42;
-    let x = Math.sin(ph)*amp + (trickMode==='suktis'?Math.cos(t*2-i*.3)*1.2:0);
-    let y = (trickMode==='sokis'?Math.abs(Math.sin(ph*1.5))*1.3:Math.sin(ph*.9)*.18)+.6+i*.005;
-    let z = -i*.52 + (trickMode==='suktis'?Math.sin(t*2-i*.3)*1.2:Math.cos(ph*.7)*.25);
-    /* drone offset */
-    if(droneOn){
-      x = x*.3 + droneTarget.x - i*.1*(droneTarget.x/3);
-      y = y*.4 + droneTarget.y;
-      z = z*.6 + droneTarget.z - 2.6;
+  const t=clock.getElapsedTime(), dt=Math.min(.05,clock.getDelta());
+  trickT+=dt;
+  tubeAnimals.forEach((a,i)=>{a.rotation.y+=.015;a.position.y=a.userData.baseY+Math.sin(t*1.4+i*2)*.22;});
+  holo.rotation.z+=.004;
+
+  /* mood */
+  excite=Math.max(0,excite-dt*.15);
+  const moodEl=document.getElementById('moodBadge');
+  moodEl.textContent = energy<15?'🥱':excite>1.5?'🤩':excite>0.5?'😄':'😐';
+  if(energy<12&&!feedShown&&uiMode!=='begimas'){feedShown=true;document.getElementById('feedOverlay').classList.add('on');}
+
+  /* runner movement */
+  if(runner&&!runner.waiting){
+    runner.t+=dt;
+    runnerSpawn();
+    const sp=(2.2+runner.lvl*1.1)*dt*3;
+    runner.obs.forEach(o=>o.mesh.position.z+=sp);
+    if(runner.spinGate)runner.spinGate.mesh.position.z+=sp;
+    /* collisions & passes */
+    runner.obs=runner.obs.filter(o=>{
+      if(o.mesh.position.z>4){scene.remove(o.mesh);if(!o.hit){runner.passed++;runner.streakMiss=0;addPoints(2,null,'');}updRunHud();return false;}
+      if(!o.hit&&o.mesh.position.z>1.6&&o.mesh.position.z<3.4){
+        const dx=Math.abs(head.position.x-o.mesh.position.x);
+        const dy=o.high? (head.position.y>2.0?1:0):(head.position.y<1.9?1:0);
+        if(dx<1.5&&dy){o.hit=true;runnerHit();}
+      }
+      return true;
+    });
+    if(runner.spinGate){
+      const g=runner.spinGate;
+      if(g.mesh.position.z>1.4&&g.mesh.position.z<3.6){
+        if(runner.spinNeed){ /* passed with spin */ }
+      }
+      if(g.mesh.position.z>4){
+        scene.remove(g.mesh);
+        if(runner.spinNeed){runner.passed++;addPoints(5,null,'🌀');sfx('chime');}
+        else runnerHit();
+        runner.spinGate=null;runner.spinNeed=false;
+        document.getElementById('spinAlert').style.display='none';updRunHud();
+      }
+      g.mesh.rotation.z+=.05;
     }
-    segMeshes[i].position.set(x, Math.max(.3,y*(trickMode==='miegas'?.5:1)), z+2.6);
-    let h=(i/SEGS+hueShift)%1;
-    segMats[i].color.setHSL(h, trickMode==='miegas'?.15:.85, trickMode==='svyteti'?.72:.55);
-    segMats[i].emissive.setHSL(h,1,(trickMode==='svyteti'?.35:0)+turbo*.25);
+    if(runner.passed>=runner.need){
+      if(runner.lvl>=3){status('🏆 VISI 3 LYGIAI ĮVEIKTI!',4000);addPoints(30,'runner-done','🏆');sfx('fanfare');stopRunner();uiMode='triukai';buildTabs();renderModePanel();}
+      else{runner.lvl++;runner.passed=0;runner.need=10+runner.lvl*2;status('⬆️ LYGIS '+runner.lvl+'!',2500);sfx('fanfare');addPoints(10,null,'⬆️');}
+      updRunHud();
+    }
   }
-  if(trickMode==='vaivorykste') hueShift+=.012;
-  head.lookAt(camera3.position.x, head.position.y, camera3.position.z);
-  const cur=snake.scale.x, ns=cur+(targetScale-cur)*.06;
+
+  const speed=(trickMode==='miegas'?.25:trickMode==='sokis'?3.2:1.4)+turbo*3+(runner?1.5:0);
+  const amp=trickMode==='miegas'?.25:trickMode==='sokis'?1.1:.7;
+  for(let i=0;i<SEGS;i++){
+    const ph=t*speed-i*.42;
+    let x=Math.sin(ph)*amp*(runner?.25:1)+(trickMode==='suktis'?Math.cos(t*2-i*.3)*1.2:0);
+    let y=(trickMode==='sokis'?Math.abs(Math.sin(ph*1.5))*1.3:Math.sin(ph*.9)*.18)+.6+i*.005;
+    let z=-i*.52+(trickMode==='suktis'?Math.sin(t*2-i*.3)*1.2:Math.cos(ph*.7)*.25);
+    if(droneOn||runner){
+      x=x*.3+droneTarget.x-i*.06*droneTarget.x;
+      y=y*.4+droneTarget.y;
+      if(!runner)z=z*.6+droneTarget.z-2.6;
+    }
+    segMeshes[i].position.set(x,Math.max(.3,y*(trickMode==='miegas'?.5:1)),z+2.6);
+    let h=(i/SEGS+hueShift)%1;
+    segMats[i].color.setHSL(h,trickMode==='miegas'?.15:.85,trickMode==='svyteti'?.72:.55);
+    segMats[i].emissive.setHSL(h,1,(trickMode==='svyteti'?.35:0)+turbo*.25+excite*.06);
+  }
+  if(trickMode==='vaivorykste')hueShift+=.012;
+  snake.rotation.y+=spinVel*dt; spinVel*=.94;
+  head.lookAt(camera3.position.x,head.position.y,camera3.position.z);
+  const cur=snake.scale.x,ns=cur+(targetScale-cur)*.06;
   snake.scale.set(ns,ns,ns);
+
+  /* fire */
+  if(fireT>0){
+    fireT-=dt;
+    for(let i=0;i<3;i++){
+      const p=new THREE.Mesh(new THREE.SphereGeometry(.09,6,6),new THREE.MeshBasicMaterial({color:Math.random()<.5?0xff7b2e:0xffd94a}));
+      const hp=head.getWorldPosition(new THREE.Vector3());
+      p.position.copy(hp).add(new THREE.Vector3((Math.random()-.5)*.3,.1,.6));
+      p.userData.v=new THREE.Vector3((Math.random()-.5)*.06,.02+Math.random()*.04,.22+Math.random()*.1);
+      p.userData.life=.8;particles.add(p);
+    }
+  }
+  /* shield */
+  if(shieldT>0){
+    shieldT-=dt;
+    if(!shieldMesh){shieldMesh=new THREE.Mesh(new THREE.SphereGeometry(3,20,16),new THREE.MeshBasicMaterial({color:0x35c8ff,transparent:true,opacity:.16,side:THREE.DoubleSide}));shieldMesh.position.set(0,1.5,1.5);scene.add(shieldMesh);}
+    shieldMesh.material.opacity=.1+Math.sin(t*6)*.06;
+  }else if(shieldMesh){scene.remove(shieldMesh);shieldMesh=null;}
+
   particles.children.slice().forEach(p=>{
-    p.position.add(p.userData.v); p.userData.v.y-=.003; p.userData.life-=.014;
-    p.material.opacity=p.userData.life; p.material.transparent=true;
-    if(p.userData.life<=0) particles.remove(p);
+    p.position.add(p.userData.v);p.userData.v.y-=.003;p.userData.life-=.016;
+    p.material.opacity=p.userData.life;p.material.transparent=true;
+    if(p.userData.life<=0)particles.remove(p);
   });
-  if(trickMode!=='idle'&&trickMode!=='miegas'&&trickT>4) setTrick('idle');
-  document.getElementById('energyFill').style.width = energy+'%';
-  renderer.render(scene, camera3);
+  if(trickMode!=='idle'&&trickMode!=='miegas'&&trickT>4)setTrick('idle');
+  document.getElementById('energyFill').style.width=energy+'%';
+  renderer.render(scene,camera3);
   requestAnimationFrame(animate);
 }
 animate();
 addEventListener('resize',()=>{camera3.aspect=wrap.clientWidth/wrap.clientHeight;camera3.updateProjectionMatrix();renderer.setSize(wrap.clientWidth,wrap.clientHeight);});
 
-/* ================= HAND LOOP ================= */
-const HAND_CONN = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
-let handLm=null, video=null, lastFacing=null, stableLabel=null, stableCount=0;
+function runnerHit(){
+  runner.lives--;runner.streakMiss++;sfx('fail');
+  status(runner.lives>0?'💥 Oi! Liko '+runner.lives+' ❤️':'💥 Gyvybės baigėsi!');
+  burst(0xff5470,14);
+  updRunHud();
+  if(runner.streakMiss>=3){breathBreak();return;}
+  if(runner.lives<=0){
+    runner.waiting=true;
+    setTimeout(()=>{status('Nieko tokio — bandom iš naujo! 💪');runner.lives=3;runner.passed=Math.max(0,runner.passed-2);runner.waiting=false;runner.streakMiss=0;updRunHud();},1800);
+  }
+}
+function breathBreak(){
+  runner.waiting=true;runner.streakMiss=0;
+  const ov=document.getElementById('breathOverlay');ov.classList.add('on');
+  let n=2;document.getElementById('breathCount').textContent=n+' kvėpavimai…';
+  const iv=setInterval(()=>{n--;
+    if(n<=0){clearInterval(iv);ov.classList.remove('on');status('Šaunuolis. Klaidos = augimas. Tęsiam! 💙',3000);if(runner){runner.waiting=false;runner.lives=3;updRunHud();}}
+    else document.getElementById('breathCount').textContent=n+' kvėpavimas…';
+  },8000);
+  addPoints(8,null,'💙');
+}
+document.querySelectorAll('.food-btn').forEach(b=>{
+  b.onclick=()=>{
+    const ok=b.dataset.food==='healthy';
+    const msg=document.getElementById('foodMsg');
+    if(ok){energy=100;msg.textContent='🍎 Tikra energija! Baltymai ir vitaminai veikia ILGAI.';sfx('fanfare');addPoints(10,null,'🍎');
+      setTimeout(()=>{document.getElementById('feedOverlay').classList.remove('on');feedShown=false;},1600);}
+    else{energy=55;msg.textContent='🍭 Cukrus duoda GREITĄ bumą… ir greitą nuovargį. Kitąkart — 🍎!';sfx('fail');
+      setTimeout(()=>{energy=25;document.getElementById('feedOverlay').classList.remove('on');feedShown=false;},2400);}
+  };
+});
 
-function drawLm(ctx, lms, w, h){
+/* ================= HAND LOOP ================= */
+const HAND_CONN=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+let handLm=null,video=null,lastFacing=null,stableLabel=null,stableCount=0,lastFist=false,wasOpen=false,tipsTrig=false;
+
+function drawLm(ctx,lms,w,h){
   ctx.clearRect(0,0,w,h);
   lms.forEach(lm=>{
-    ctx.strokeStyle='rgba(126,224,255,.9)'; ctx.lineWidth=2;
+    ctx.strokeStyle='rgba(126,224,255,.95)';ctx.lineWidth=2;
     HAND_CONN.forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(lm[a].x*w,lm[a].y*h);ctx.lineTo(lm[b].x*w,lm[b].y*h);ctx.stroke();});
     lm.forEach((p,i)=>{ctx.fillStyle=i===0?'#ffd94a':'#ff5470';ctx.beginPath();ctx.arc(p.x*w,p.y*h,i===0?5:3,0,7);ctx.fill();});
   });
 }
-
 function onFrame(){
   if(!handLm||!video||video.readyState<2){requestAnimationFrame(onFrame);return;}
-  const res = handLm.detectForVideo(video, performance.now());
-  const info=document.getElementById('handInfo'), fb=document.getElementById('fingerBig');
+  const res=handLm.detectForVideo(video,performance.now());
+  const info=document.getElementById('handInfo'),fb=document.getElementById('fingerBig');
   const cv=document.getElementById('lmCanvas');
   if(cv.width!==cv.clientWidth){cv.width=cv.clientWidth;cv.height=cv.clientHeight;}
-  const ctx=cv.getContext('2d');
-  const hands = res.landmarks||[];
-  drawLm(ctx,hands,cv.width,cv.height);
-
+  drawLm(cv.getContext('2d'),res.landmarks||[],cv.width,cv.height);
+  const hands=res.landmarks||[];
   if(hands.length){
-    const lm = hands[0];
-    const fingers = raisedFingers(lm);
-    fb.textContent = hands.length===2 ? '✌🤲' : fingers;
-    info.textContent = hands.length===2 ? '🤲 DVI rankos matomos!' : `✋ Ranka matoma · pirštų: ${fingers}`;
+    const lm=hands[0];
+    const fingers=raisedFingers(lm);
+    fb.textContent=hands.length===2?'🤲':fingers;
+    info.textContent=hands.length===2?'🤲 DVI rankos!':`✋ pirštų: ${fingers}`;
     addPoints(10,'first-hand','✋');
 
-    /* recording (any mode) */
+    /* record */
     if(recording&&recLeft>0){
-      examples.push({label:recording,vec:toVec(lm)}); recLeft--;
-      const c=document.getElementById('cnt-'+recording); if(c) c.textContent=examples.filter(e=>e.label===recording).length+' pvz.';
+      examples.push({label:recording,vec:toVec(lm)});recLeft--;
+      const c=document.getElementById('cnt-'+recording);if(c)c.textContent=examples.filter(e=>e.label===recording).length+' pvz.';
       if(recLeft===0){
-        const b=document.getElementById('rec-'+recording); if(b){b.classList.remove('rec');b.textContent='+ Dar';}
-        status('✅ Išmokta!'); addPoints(10,'train-'+recording,'🎓');
-        const total=examples.length, tr=new Set(examples.map(e=>e.label)).size;
-        document.getElementById('modelState').textContent=`🧠 Modelis: ${total} pvz. · ${tr} gestai`;
+        const b=document.getElementById('rec-'+recording);if(b){b.classList.remove('rec');b.textContent='+ Dar';}
+        status('✅ Išmokta!');addPoints(10,'train-'+recording,'🎓');sfx('chime');
+        const total=examples.length,tr=new Set(examples.map(e=>e.label)).size;
+        document.getElementById('modelState').textContent='🧠 '+total+' pvz · '+tr+' gestai';
         recording=null;
       }
     }
 
-    if(uiMode==='triukai' && !recording){
-      const pred = classify(lm);
+    /* universal: 3 fingers = spin (not in draw/runner steering conflicts are fine) */
+    if(fingers===3&&uiMode!=='piesimas'){
+      spinVel=Math.min(6,spinVel+.5);
+      if(runner&&runner.spinGate){runner.spinNeed=true;}
+      addPoints(10,'spin-used','🌀');
+    }
+    /* universal: tips together = FIRE */
+    if(tipsTogether(lm)){
+      if(!tipsTrig){tipsTrig=true;fireBreath();addPoints(10,'tips-fire','🔥');}
+    } else tipsTrig=false;
+
+    if(uiMode==='triukai'&&!recording){
+      const pred=classify(lm);
       document.querySelectorAll('.gest-row').forEach(r=>r.classList.remove('active-pred'));
       if(pred){
         document.getElementById('confFill').style.width=Math.round(pred.conf*100)+'%';
-        const row=document.getElementById('row-'+pred.label); if(row) row.classList.add('active-pred');
-        if(pred.label===stableLabel) stableCount++; else {stableLabel=pred.label;stableCount=1;}
-        if(stableCount>6&&pred.conf>=.7) setTrick(pred.label);
+        const row=document.getElementById('row-'+pred.label);if(row)row.classList.add('active-pred');
+        if(pred.label===stableLabel)stableCount++;else{stableLabel=pred.label;stableCount=1;}
+        if(stableCount>6&&pred.conf>=.7)setTrick(pred.label);
       }
     }
     else if(uiMode==='dydis'){
       if(hands.length===2){
-        const d = Math.hypot(hands[0][0].x-hands[1][0].x, hands[0][0].y-hands[1][0].y);
-        targetScale = .5 + Math.min(1.9, d*3.2);
+        const d=Math.hypot(hands[0][0].x-hands[1][0].x,hands[0][0].y-hands[1][0].y);
+        targetScale=.5+Math.min(1.9,d*3.2);
         addPoints(12,'size-used','📏');
-      } else info.textContent='Parodyk ABI rankas 🤲';
+      }else info.textContent='Parodyk ABI rankas 🤲';
     }
-    else if(uiMode==='dronas'){
+    else if(uiMode==='dronas'||uiMode==='begimas'){
       if(fingers>=4){
-        droneOn = true;
-        const px=lm[9].x, py=lm[9].y;
-        droneTarget.x = (0.5-px)*8;          /* mirrored */
-        droneTarget.y = (1-py)*3.4 + .4;
+        droneOn=true;
+        droneTarget.x=(0.5-lm[9].x)*8;
+        droneTarget.y=(1-lm[9].y)*3.4+.4;
         addPoints(12,'drone-used','🚁');
-        info.textContent='🚁 DRONAS SEKA DELNĄ';
-      } else if(fingers<=1){
-        if(droneOn){droneOn=false;status('🛬 Dronas nusileido');}
-      }
+      }else if(fingers<=1&&uiMode==='dronas'){if(droneOn){droneOn=false;status('🛬 Nusileido');}}
     }
     else if(uiMode==='energija'){
-      const facing = palmFacing(lm, (res.handedness&&res.handedness[0]&&res.handedness[0][0].categoryName)||'Right');
-      if(fingers>=4){
-        if(facing){ energy=Math.min(100,energy+.5); turbo=Math.max(0,turbo-.05); info.textContent='🔋 KRAUNASI…'; }
-        else {
-          if(energy>1){ energy=Math.max(0,energy-.8); turbo=Math.min(1,turbo+.08); info.textContent='⚡ TURBO!!!';
-            if(Math.random()<.2) burst(0x35c8ff,4,new THREE.Vector3(head.position.x,head.position.y,head.position.z)); }
-          else { turbo=Math.max(0,turbo-.05); info.textContent='🪫 Energija baigėsi — apversk delną!'; }
+      const facing=palmFacing(lm,(res.handedness&&res.handedness[0]&&res.handedness[0][0].categoryName)||'Right');
+      const isFist=fingers<=1, isOpen=fingers>=4;
+      /* fist pump: open->fist transition */
+      if(isOpen)wasOpen=true;
+      if(isFist&&wasOpen){wasOpen=false;energy=Math.min(100,energy+7);burst(0x41d67c,6,new THREE.Vector3(0,1.6,2.6));sfx('blip');addPoints(12,'fist-pump','✊');info.textContent='✊ PUMPUOJI energiją!';}
+      if(isOpen){
+        if(facing){energy=Math.min(100,energy+.3);turbo=Math.max(0,turbo-.05);info.textContent='🔋 krauna…';}
+        else{
+          if(energy>1){energy=Math.max(0,energy-.8);turbo=Math.min(1,turbo+.08);info.textContent='⚡ TURBO!';
+            if(Math.random()<.2)burst(0x35c8ff,4,head.getWorldPosition(new THREE.Vector3()));}
+          else{turbo=Math.max(0,turbo-.05);info.textContent='🪫 tuščia — pumpuok kumščiu!';}
         }
-        if(lastFacing!==null&&lastFacing!==facing) addPoints(12,'flip-used','⚡');
+        if(lastFacing!==null&&lastFacing!==facing)addPoints(12,'flip-used','⚡');
         lastFacing=facing;
       }
     }
-    if(uiMode!=='energija') turbo=Math.max(0,turbo-.03);
+    else if(uiMode==='piesimas'){
+      if(onlyIndex(lm)){
+        drawing=true;
+        trail.push([(1-lm[8].x)*dCv.width, lm[8].y*dCv.height]);
+        if(trail.length>240)trail.shift();
+        renderTrail();
+        info.textContent='✍️ Pieši… (baigsi — sugniaužk ✊)';
+      } else if(fingers<=1&&drawing){ drawing=false; finishDraw(); }
+    }
+    if(uiMode!=='energija')turbo=Math.max(0,turbo-.02);
   } else {
-    fb.textContent='–'; info.textContent='Ranka nematoma — pakelk prieš kamerą';
-    stableLabel=null; stableCount=0; droneOn=false; turbo=Math.max(0,turbo-.03);
+    fb.textContent='–';info.textContent='Pakelk ranką 🖐';
+    stableLabel=null;stableCount=0;if(uiMode==='dronas')droneOn=false;
+    turbo=Math.max(0,turbo-.02);
+    if(drawing){drawing=false;finishDraw();}
   }
   requestAnimationFrame(onFrame);
 }
 
-document.getElementById('startBtn').onclick = async ()=>{
+document.getElementById('privBtn').onclick=function(){
+  const v=document.getElementById('cam');
+  v.classList.toggle('clear');
+  this.textContent=v.classList.contains('clear')?'👁 rodo':'🫥 blur';
+};
+
+document.getElementById('startBtn').onclick=async()=>{
   const note=document.getElementById('loaderNote');
   try{
-    note.textContent='🧠 Kraunamas rankų atpažinimo modelis…';
+    note.textContent='🧠 Kraunamas rankų modelis…';
     const files=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
     handLm=await HandLandmarker.createFromOptions(files,{
       baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},
       runningMode:'VIDEO',numHands:2
     });
-    note.textContent='📷 Prašom kameros leidimo…';
+    note.textContent='📷 Kameros leidimas…';
     const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:480},audio:false});
-    video=document.getElementById('cam'); video.srcObject=stream;
-    ['introPanel'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    video=document.getElementById('cam');video.srcObject=stream;
+    document.getElementById('introPanel').classList.add('hidden');
     ['camPanel','rightPanel','progressPanel','modeTabs'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
-    buildTabs(); buildUnlockList(); renderModePanel();
-    status('Išmokyk gyvatę pirmo triuko — „● Įrašyti" ir rodyk gestą! 🖐',5000);
+    buildTabs();buildUnlockList();renderModePanel();
+    status('Išmokyk pirmo triuko — „● Įrašyti" ir rodyk gestą! 🖐',5000);
     requestAnimationFrame(onFrame);
   }catch(e){
-    note.textContent='⚠️ Nepavyko: '+(e.name==='NotAllowedError'?'kameros leidimas atmestas.':'reikia interneto modeliui parsisiųsti.')+' Bandyk dar.';
+    note.textContent='⚠️ '+(e.name==='NotAllowedError'?'Kameros leidimas atmestas.':'Reikia interneto modeliui.')+' Bandyk dar.';
   }
 };
 document.getElementById('mbtn').onclick=()=>document.getElementById('mpanel').classList.toggle('on');
 </script>
 
-<!-- PA1 v2.1 · AInimalų Laboratorija · Neuron 2026-08-14 · CDN: three.js + MediaPipe (reikia interneto) -->
+<!-- PA1 v2.2 · AInimalų Laboratorija · Neuron 2026-08-14 -->
 </body>
 </html>
